@@ -213,6 +213,12 @@ class DriveTaggingPopup {
         const tagText = this.tagInput.value.trim();
         if (!tagText || !this.currentFileId) return;
 
+        // Check for duplicate tags
+        if (this.currentTags.includes(tagText)) {
+            this.showError('This tag already exists');
+            return;
+        }
+
         try {
             this.showLoading();
             
@@ -292,7 +298,7 @@ class DriveTaggingPopup {
     // Load tag suggestions
     async loadTagSuggestions() {
         // For now, we'll show the current tags as suggestions
-        // In a full implementation, this would load from all files
+        // TODO: In Phase 2, this should load tags from all files across Drive
         const tagsToSuggest = Array.isArray(this.currentTags) ? this.currentTags : [];
         const suggestions = [...tagsToSuggest];
         

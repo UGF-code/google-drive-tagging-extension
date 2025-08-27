@@ -50,39 +50,39 @@
 - [x] Click "Add" button
 - [x] Verify tag appears in current tags list
 - [x] Verify tag input clears
-- [ ] Test with Enter key
-- [ ] Test with special characters in tags
-- [ ] Test with spaces in tag names
+- [x] Test with Enter key
+- [x] Test with special characters in tags
+- [x] Test with spaces in tag names
 
 ### **Multiple Tags**
-- [ ] Add 3-5 different tags to same file
-- [ ] Verify all tags display correctly
-- [ ] Verify tags are saved to file
-- [ ] Test with duplicate tags (should be prevented)
+- [x] Add 3-5 different tags to same file
+- [x] Verify all tags display correctly
+- [x] Verify tags are saved to file
+- [x] Test with duplicate tags (should be prevented) - **ISSUE: Duplicates allowed**
 
 ### **Removing Tags**
-- [ ] Add a tag to a file
-- [ ] Click the "×" button on the tag
-- [ ] Verify tag disappears from list
-- [ ] Verify tag is removed from file
-- [ ] Test removing multiple tags
+- [x] Add a tag to a file
+- [x] Click the "×" button on the tag
+- [x] Verify tag disappears from list
+- [x] Verify tag is removed from file
+- [x] Test removing multiple tags
 
 ### **Tag Persistence**
-- [ ] Add tags to a file
-- [ ] Close the file completely
-- [ ] Reopen the same file
-- [ ] Click extension icon
-- [ ] Verify tags are still there
+- [x] Add tags to a file
+- [x] Close the file completely
+- [x] Reopen the same file
+- [x] Click extension icon
+- [x] Verify tags are still there
 - [ ] Test persistence across browser sessions
 
 ## **🔍 Tag Suggestions Testing**
 
 ### **Suggestion Display**
-- [ ] Add tags to one file
-- [ ] Open a different file
-- [ ] Verify previous tags appear as suggestions
-- [ ] Test clicking on suggestion tags
-- [ ] Verify suggestions work across different files
+- [x] Add tags to one file
+- [x] Open a different file
+- [x] Verify previous tags appear as suggestions
+- [x] Test clicking on suggestion tags
+- [x] Verify suggestions work across different files - **ISSUE: Shows current file tags instead of global**
 
 ## **⚡ Performance & UI Testing**
 
