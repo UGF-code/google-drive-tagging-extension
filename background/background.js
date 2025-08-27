@@ -1,5 +1,5 @@
 // Background Service Worker for Google Drive Tagging Extension
-// This runs in the background and handles authentication, context menus, and message passing
+// Clean Architecture: Central controller for all Google Drive operations
 
 // OAuth configuration
 const OAUTH_CONFIG = {
@@ -9,23 +9,35 @@ const OAUTH_CONFIG = {
   ]
 };
 
+// Message types for clean communication
+const MESSAGE_TYPES = {
+  GET_TAGS: 'getTags',
+  ADD_TAG: 'addTag',
+  REMOVE_TAG: 'removeTag',
+  UPDATE_TAGS: 'updateTags',
+  CHECK_AUTH: 'checkAuth',
+  AUTHENTICATE: 'authenticate',
+  REVOKE_AUTH: 'revokeAuth'
+};
+
 // Initialize extension when installed
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Google Drive Tagging Extension installed');
-  
-  // Test context menu API availability
-  if (chrome.contextMenus) {
-    console.log('Context menus API is available');
-  } else {
+  console.log('Google Drive Tagging Extension installed - Clean Architecture');
+  createContextMenus();
+});
+
+// Create context menus
+function createContextMenus() {
+  if (!chrome.contextMenus) {
     console.error('Context menus API is not available');
     return;
   }
   
-  // Remove any existing context menus first
+  console.log('Creating context menus...');
+  
+  // Remove existing menus first
   chrome.contextMenus.removeAll(() => {
-    console.log('Removed existing context menus');
-    
-    // Create context menu items - using 'link' context for file links
+    // Create context menu items
     chrome.contextMenus.create({
       id: 'tagFile',
       title: 'Tag File',
@@ -66,7 +78,7 @@ chrome.runtime.onInstalled.addListener(() => {
       }
     });
   });
-});
+}
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -74,7 +86,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   
   if (info.menuItemId === 'tagFile') {
     console.log('Tag File context menu clicked (link)');
-    // Single file tagging - send message to content script to detect clicked file
     chrome.tabs.sendMessage(tab.id, {
       action: 'openTagDialogForClickedFile',
       pageUrl: tab.url,
@@ -82,7 +93,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     });
   } else if (info.menuItemId === 'tagFilePage') {
     console.log('Tag Current File context menu clicked (page)');
-    // Page-level file tagging
     chrome.tabs.sendMessage(tab.id, {
       action: 'openTagDialogForClickedFile',
       pageUrl: tab.url,
@@ -90,7 +100,6 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     });
   } else if (info.menuItemId === 'batchTag') {
     console.log('Batch Tag context menu clicked');
-    // Batch file tagging
     chrome.tabs.sendMessage(tab.id, {
       action: 'openBatchTagDialog',
       selection: info.selectionText
@@ -98,108 +107,78 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   }
 });
 
-// Handle messages from popup and content scripts
+// Central message handler - receives requests from popup and content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Background received message:', request.action, 'from:', sender.id);
+  
+  // Validate message format
+  if (!request.action) {
+    sendResponse({ success: false, error: 'Missing action parameter' });
+    return;
+  }
+  
+  // Route to appropriate handler
   switch (request.action) {
-    case 'authenticate':
+    case MESSAGE_TYPES.CHECK_AUTH:
+      handleCheckAuth(sendResponse);
+      break;
+      
+    case MESSAGE_TYPES.AUTHENTICATE:
       handleAuthentication(sendResponse);
-      return true; // Keep message channel open for async response
+      break;
       
-    case 'getAuthToken':
-      getAuthToken(sendResponse);
-      return true;
+    case MESSAGE_TYPES.REVOKE_AUTH:
+      handleRevokeAuth(sendResponse);
+      break;
       
-    case 'revokeAuth':
-      revokeAuth(sendResponse);
-      return true;
+    case MESSAGE_TYPES.GET_TAGS:
+      handleGetTags(request.fileId, sendResponse);
+      break;
       
-    case 'updateFileTags':
-      updateFileTags(request.fileId, request.tags, sendResponse);
-      return true;
+    case MESSAGE_TYPES.ADD_TAG:
+      handleAddTag(request.fileId, request.tag, sendResponse);
+      break;
       
-    case 'getFileTags':
-      getFileTags(request.fileId, sendResponse);
-      return true;
+    case MESSAGE_TYPES.REMOVE_TAG:
+      handleRemoveTag(request.fileId, request.tag, sendResponse);
+      break;
+      
+    case MESSAGE_TYPES.UPDATE_TAGS:
+      handleUpdateTags(request.fileId, request.tags, sendResponse);
+      break;
       
     default:
       console.log('Unknown action:', request.action);
+      sendResponse({ success: false, error: `Unknown action: ${request.action}` });
   }
+  
+  return true; // Keep message channel open for async response
 });
 
-// Authentication functions
+// Authentication handlers
+async function handleCheckAuth(sendResponse) {
+  try {
+    const token = await getAuthToken(false); // Non-interactive
+    sendResponse({ success: true, authenticated: !!token });
+  } catch (error) {
+    console.log('Auth check failed:', error.message);
+    sendResponse({ success: true, authenticated: false });
+  }
+}
+
 async function handleAuthentication(sendResponse) {
   try {
-    const token = await getAuthToken();
+    const token = await getAuthToken(true); // Interactive
     sendResponse({ success: true, token });
   } catch (error) {
     console.error('Authentication failed:', error);
-    
-    // Provide specific guidance for testing mode
-    let userMessage = error.message;
-    if (error.message.includes('user did not approve')) {
-      userMessage = 'Please approve the app in the OAuth consent screen. Since this is in testing mode, you need to explicitly grant access. Check your browser for a popup or redirect.';
-    } else if (error.message.includes('OAuth2')) {
-      userMessage = 'OAuth configuration error. Please check your Google Cloud Console setup.';
-    }
-    
-    sendResponse({ success: false, error: userMessage });
+    sendResponse({ success: false, error: error.message });
   }
 }
 
-async function getAuthToken(sendResponse) {
+async function handleRevokeAuth(sendResponse) {
   try {
-    const token = await new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: true }, (token) => {
-        if (chrome.runtime.lastError) {
-          console.error('Chrome identity error:', chrome.runtime.lastError);
-          reject(new Error(chrome.runtime.lastError.message));
-        } else {
-          resolve(token);
-        }
-      });
-    });
-    
-    if (sendResponse) {
-      sendResponse({ success: true, token });
-    }
-    return token;
-  } catch (error) {
-    console.error('Failed to get auth token:', error);
-    
-    // Provide more helpful error messages
-    let userMessage = error.message;
-    if (error.message.includes('user did not approve')) {
-      userMessage = 'Please approve the permissions when prompted. If you don\'t see a popup, check your browser\'s popup blocker.';
-    } else if (error.message.includes('OAuth2')) {
-      userMessage = 'OAuth configuration error. Please check your Google Cloud Console setup.';
-    }
-    
-    if (sendResponse) {
-      sendResponse({ success: false, error: userMessage });
-    }
-    throw error;
-  }
-}
-
-async function revokeAuth(sendResponse) {
-  try {
-    await new Promise((resolve, reject) => {
-      chrome.identity.getAuthToken({ interactive: false }, (token) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else {
-          // Revoke the token
-          fetch(`https://accounts.google.com/o/oauth2/revoke?token=${token}`)
-            .then(() => {
-              chrome.identity.removeCachedAuthToken({ token }, () => {
-                resolve();
-              });
-            })
-            .catch(reject);
-        }
-      });
-    });
-    
+    await revokeAuth();
     sendResponse({ success: true });
   } catch (error) {
     console.error('Failed to revoke auth:', error);
@@ -207,79 +186,152 @@ async function revokeAuth(sendResponse) {
   }
 }
 
-// Google Drive API functions
-async function updateFileTags(fileId, tags, sendResponse) {
+// Tag operation handlers
+async function handleGetTags(fileId, sendResponse) {
   try {
-    const token = await getAuthToken();
-    
-    // First, get the current file to check permissions
-    const getResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=capabilities,permissions`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!getResponse.ok) {
-      throw new Error(`Failed to get file permissions: HTTP ${getResponse.status}`);
+    if (!fileId) {
+      throw new Error('File ID is required');
     }
     
-    const fileData = await getResponse.json();
-    
-    // Check if user can edit the file
-    if (!fileData.capabilities?.canEdit) {
-      throw new Error('You do not have permission to edit this file. Please make sure you own the file or have edit access.');
-    }
-    
-    // Update the file with tags
-    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=appProperties`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        appProperties: {
-          tags: JSON.stringify(tags)
-        }
-      })
-    });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Drive API Error Response:', errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}. ${errorText}`);
-    }
-    
-    const result = await response.json();
-    sendResponse({ success: true, data: result });
+    const tags = await getFileTags(fileId);
+    sendResponse({ success: true, data: tags });
   } catch (error) {
-    console.error('Failed to update file tags:', error);
+    console.error('Failed to get tags:', error);
     sendResponse({ success: false, error: error.message });
   }
 }
 
-async function getFileTags(fileId, sendResponse) {
+async function handleAddTag(fileId, tag, sendResponse) {
   try {
-    const token = await getAuthToken();
-    
-    const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=appProperties`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!fileId || !tag) {
+      throw new Error('File ID and tag are required');
     }
     
-    const result = await response.json();
-    const tags = result.appProperties?.tags ? JSON.parse(result.appProperties.tags) : [];
+    const currentTags = await getFileTags(fileId);
+    const newTags = [...new Set([...currentTags, tag])]; // Remove duplicates
+    await updateFileTags(fileId, newTags);
     
-    sendResponse({ success: true, tags });
+    sendResponse({ success: true, data: newTags });
   } catch (error) {
-    console.error('Failed to get file tags:', error);
+    console.error('Failed to add tag:', error);
     sendResponse({ success: false, error: error.message });
   }
+}
+
+async function handleRemoveTag(fileId, tag, sendResponse) {
+  try {
+    if (!fileId || !tag) {
+      throw new Error('File ID and tag are required');
+    }
+    
+    const currentTags = await getFileTags(fileId);
+    const newTags = currentTags.filter(t => t !== tag);
+    await updateFileTags(fileId, newTags);
+    
+    sendResponse({ success: true, data: newTags });
+  } catch (error) {
+    console.error('Failed to remove tag:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+async function handleUpdateTags(fileId, tags, sendResponse) {
+  try {
+    if (!fileId) {
+      throw new Error('File ID is required');
+    }
+    
+    const newTags = Array.isArray(tags) ? tags : [];
+    await updateFileTags(fileId, newTags);
+    
+    sendResponse({ success: true, data: newTags });
+  } catch (error) {
+    console.error('Failed to update tags:', error);
+    sendResponse({ success: false, error: error.message });
+  }
+}
+
+// Core Google Drive API functions
+async function getAuthToken(interactive = true) {
+  return new Promise((resolve, reject) => {
+    chrome.identity.getAuthToken({ interactive }, (token) => {
+      if (chrome.runtime.lastError) {
+        console.error('Chrome identity error:', chrome.runtime.lastError);
+        reject(new Error(chrome.runtime.lastError.message));
+      } else {
+        resolve(token);
+      }
+    });
+  });
+}
+
+async function revokeAuth() {
+  const token = await getAuthToken(false);
+  if (token) {
+    await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${token}`);
+    await new Promise((resolve) => {
+      chrome.identity.removeCachedAuthToken({ token }, resolve);
+    });
+  }
+}
+
+async function getFileTags(fileId) {
+  const token = await getAuthToken(false);
+  
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=appProperties`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get file tags: HTTP ${response.status}`);
+  }
+  
+  const result = await response.json();
+  return result.appProperties?.tags ? JSON.parse(result.appProperties.tags) : [];
+}
+
+async function updateFileTags(fileId, tags) {
+  const token = await getAuthToken(false);
+  
+  // First, check file permissions
+  const getResponse = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=capabilities`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  
+  if (!getResponse.ok) {
+    throw new Error(`Failed to get file permissions: HTTP ${getResponse.status}`);
+  }
+  
+  const fileData = await getResponse.json();
+  
+  if (!fileData.capabilities?.canEdit) {
+    throw new Error('You do not have permission to edit this file');
+  }
+  
+  // Update the file with tags
+  const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=appProperties`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      appProperties: {
+        tags: JSON.stringify(tags)
+      }
+    })
+  });
+  
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update file tags: HTTP ${response.status}. ${errorText}`);
+  }
+  
+  return await response.json();
 }
 
 // Utility functions
@@ -294,7 +346,8 @@ chrome.action.onClicked.addListener((tab) => {
   if (tab.url && tab.url.includes('drive.google.com')) {
     chrome.tabs.sendMessage(tab.id, { action: 'openPopup' });
   } else {
-    // Open popup directly
     chrome.action.openPopup();
   }
 });
+
+console.log('Background script loaded - Clean Architecture ready');
