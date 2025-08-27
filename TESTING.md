@@ -9,20 +9,20 @@
 - [ ] Verify extension appears in list
 
 ### **OAuth Authentication**
-- [ ] Go to Google Drive
-- [ ] Click extension icon
-- [ ] Click "Connect Google Drive"
-- [ ] Grant OAuth permissions when prompted
-- [ ] Verify status shows "Connected to Google Drive"
+- [x] Go to Google Drive
+- [x] Click extension icon
+- [x] Click "Connect Google Drive"
+- [x] Grant OAuth permissions when prompted
+- [x] Verify status shows "Connected to Google Drive"
 - [ ] Test "Reconnect" button functionality
 
 ## **📁 File Detection Testing**
 
 ### **Google Drive Files**
-- [ ] Open any file in Google Drive
-- [ ] Click extension icon
-- [ ] Verify file name displays correctly
-- [ ] Verify file ID displays correctly
+- [x] Open any file in Google Drive
+- [x] Click extension icon
+- [x] Verify file name displays correctly
+- [x] Verify file ID displays correctly
 - [ ] Test with different file types (images, PDFs, etc.)
 
 ### **Google Docs Integration**
@@ -46,10 +46,10 @@
 ## **🏷️ Tag Management Testing**
 
 ### **Adding Tags**
-- [ ] Type a simple tag (e.g., "test")
-- [ ] Click "Add" button
-- [ ] Verify tag appears in current tags list
-- [ ] Verify tag input clears
+- [x] Type a simple tag (e.g., "test")
+- [x] Click "Add" button
+- [x] Verify tag appears in current tags list
+- [x] Verify tag input clears
 - [ ] Test with Enter key
 - [ ] Test with special characters in tags
 - [ ] Test with spaces in tag names

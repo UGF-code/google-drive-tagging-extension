@@ -273,11 +273,20 @@ class DriveTaggingPopup {
         }
 
         this.currentTags.innerHTML = this.currentTags.map(tag => `
-            <div class="tag">
+            <div class="tag" data-tag="${this.escapeHtml(tag)}">
                 <span>${this.escapeHtml(tag)}</span>
-                <button class="tag-remove" onclick="popup.removeTag('${this.escapeHtml(tag)}')">×</button>
+                <button class="tag-remove" title="Remove tag">×</button>
             </div>
         `).join('');
+        
+        // Add event listeners to remove buttons
+        this.currentTags.querySelectorAll('.tag-remove').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const tagElement = e.target.closest('.tag');
+                const tagToRemove = tagElement.getAttribute('data-tag');
+                this.removeTag(tagToRemove);
+            });
+        });
     }
 
     // Load tag suggestions
