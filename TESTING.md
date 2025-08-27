@@ -23,7 +23,7 @@
 - [x] Click extension icon
 - [x] Verify file name displays correctly
 - [x] Verify file ID displays correctly
-- [ ] Test with different file types (images, PDFs, etc.)
+- [ ] Test with different file types (images, videos, PDFs, etc.)
 
 ### **Google Docs Integration**
 - [ ] Open a Google Docs document
@@ -118,6 +118,56 @@
 - [x] Click "Tag File" option
 - [x] Verify tagging dialog opens
 - [x] Test with multiple file selection
+
+## **🔍 Edge Case Testing**
+
+### **Different File Types**
+- [ ] **Images (JPG, PNG, GIF, etc.)**
+  - [ ] Upload an image to Google Drive
+  - [ ] Right-click on the image
+  - [ ] Verify "Tag File" appears in context menu
+  - [ ] Click "Tag File" and add tags
+  - [ ] Verify tags are saved and displayed
+  - [ ] Test with different image formats (JPG, PNG, GIF, WebP)
+
+- [ ] **Videos (MP4, MOV, AVI, etc.)**
+  - [ ] Upload a video to Google Drive
+  - [ ] Right-click on the video
+  - [ ] Verify "Tag File" appears in context menu
+  - [ ] Click "Tag File" and add tags
+  - [ ] Verify tags are saved and displayed
+  - [ ] Test with different video formats (MP4, MOV, AVI, WebM)
+
+- [ ] **Audio Files (MP3, WAV, etc.)**
+  - [ ] Upload an audio file to Google Drive
+  - [ ] Right-click on the audio file
+  - [ ] Verify "Tag File" appears in context menu
+  - [ ] Click "Tag File" and add tags
+  - [ ] Verify tags are saved and displayed
+
+- [ ] **PDF Documents**
+  - [ ] Upload a PDF to Google Drive
+  - [ ] Right-click on the PDF
+  - [ ] Verify "Tag File" appears in context menu
+  - [ ] Click "Tag File" and add tags
+  - [ ] Verify tags are saved and displayed
+
+- [ ] **Compressed Files (ZIP, RAR, etc.)**
+  - [ ] Upload a compressed file to Google Drive
+  - [ ] Right-click on the compressed file
+  - [ ] Verify "Tag File" appears in context menu
+  - [ ] Click "Tag File" and add tags
+  - [ ] Verify tags are saved and displayed
+
+### **File Size and Performance**
+- [ ] Test with very large files (>100MB)
+- [ ] Test with many files in a folder
+- [ ] Test performance when adding tags to multiple files quickly
+
+### **Special Characters and Names**
+- [ ] Test with files containing special characters in names
+- [ ] Test with files with very long names
+- [ ] Test with files with emoji in names
 
 ## **🔒 Security & Permissions Testing**
 
