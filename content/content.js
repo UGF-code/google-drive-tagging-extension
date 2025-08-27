@@ -260,6 +260,21 @@ class DriveContentScript {
                 this.openCustomPopup();
                 break;
                 
+            case 'getCurrentTags':
+                this.loadFileTags(request.fileId).then(tags => {
+                    console.log('Content script responding with tags:', tags);
+                    sendResponse({ tags: tags });
+                });
+                return true; // Keep message channel open for async response
+                break;
+                
+            case 'storeTags':
+                const storageKey = `drive_tags_${request.fileId}`;
+                localStorage.setItem(storageKey, JSON.stringify(request.tags));
+                console.log('Content script stored tags:', request.tags);
+                sendResponse({ success: true });
+                break;
+                
             default:
                 console.log('Unknown message action:', request.action);
         }

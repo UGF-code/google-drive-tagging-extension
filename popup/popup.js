@@ -196,27 +196,32 @@ class DriveTaggingPopup {
         if (!this.currentFileId) return;
 
         try {
-            // Try to get tags from localStorage first (for consistency with content script)
-            const localStorageKey = `drive_tags_${this.currentFileId}`;
-            const storedTags = localStorage.getItem(localStorageKey);
+            // Get tags from content script via message
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            const currentTab = tabs[0];
             
             console.log('Popup loading tags for file:', this.currentFileId);
-            console.log('localStorage key:', localStorageKey);
-            console.log('Stored tags from localStorage:', storedTags);
             
-            // Test localStorage access
-            console.log('localStorage available:', typeof localStorage !== 'undefined');
-            console.log('localStorage.getItem test:', localStorage.getItem('test'));
-            localStorage.setItem('test', 'popup-test');
-            console.log('localStorage.setItem test successful');
+            // Ask content script for current tags
+            const contentResponse = await new Promise((resolve) => {
+                chrome.tabs.sendMessage(currentTab.id, {
+                    action: 'getCurrentTags',
+                    fileId: this.currentFileId
+                }, (response) => {
+                    resolve(response || { tags: [] });
+                });
+            });
             
-            if (storedTags) {
-                this.currentTags = JSON.parse(storedTags);
+            const tags = contentResponse.tags || [];
+            console.log('Tags loaded from content script:', tags);
+            
+            if (tags.length > 0) {
+                this.currentTags = tags;
                 this.renderCurrentTags();
-                console.log('Tags loaded from localStorage:', this.currentTags);
+                console.log('Tags loaded from content script:', this.currentTags);
                 return;
             } else {
-                console.log('No tags found in localStorage for this file');
+                console.log('No tags found in content script for this file');
             }
 
             // Fallback to background script (for future Drive API integration)
@@ -253,13 +258,24 @@ class DriveTaggingPopup {
         try {
             this.showLoading();
             
-            // Get existing tags from localStorage to merge properly
-            const localStorageKey = `drive_tags_${this.currentFileId}`;
-            const existingTagsJson = localStorage.getItem(localStorageKey);
-            const existingTags = existingTagsJson ? JSON.parse(existingTagsJson) : [];
+            // Get existing tags from content script via message
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            const currentTab = tabs[0];
+            
+            // Ask content script for current tags
+            const contentResponse = await new Promise((resolve) => {
+                chrome.tabs.sendMessage(currentTab.id, {
+                    action: 'getCurrentTags',
+                    fileId: this.currentFileId
+                }, (response) => {
+                    resolve(response || { tags: [] });
+                });
+            });
+            
+            const existingTags = contentResponse.tags || [];
             
             console.log('Popup merging tags:');
-            console.log('Existing tags from localStorage:', existingTags);
+            console.log('Existing tags from content script:', existingTags);
             console.log('Current tags in popup:', this.currentTags);
             console.log('New tag to add:', tagText);
             
@@ -267,8 +283,18 @@ class DriveTaggingPopup {
             const allTags = [...new Set([...existingTags, ...this.currentTags, tagText])];
             console.log('Merged tags:', allTags);
             
-            // Store merged tags in localStorage
-            localStorage.setItem(localStorageKey, JSON.stringify(allTags));
+            // Store merged tags via content script
+            const storeResponse = await new Promise((resolve) => {
+                chrome.tabs.sendMessage(currentTab.id, {
+                    action: 'storeTags',
+                    fileId: this.currentFileId,
+                    tags: allTags
+                }, (response) => {
+                    resolve(response || { success: false });
+                });
+            });
+            
+            console.log('Store response from content script:', storeResponse);
             
             // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
