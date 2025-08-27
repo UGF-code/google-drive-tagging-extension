@@ -240,7 +240,7 @@ class DriveContentScript {
         switch (request.action) {
             case 'test':
                 console.log('Content script received test message:', request.message);
-                sendResponse({ success: true, message: 'Hello from content script' });
+                sendResponse({ success: true, message: 'Hello from content script', initialized: this.isInitialized });
                 break;
                 
             case 'getCurrentFileName':
@@ -269,6 +269,14 @@ class DriveContentScript {
                 
             case 'getCurrentTags':
                 console.log('Content script received getCurrentTags request for fileId:', request.fileId);
+                console.log('Content script isInitialized:', this.isInitialized);
+                
+                // Ensure content script is initialized
+                if (!this.isInitialized) {
+                    console.log('Content script not initialized, setting up integration...');
+                    this.setupIntegration();
+                }
+                
                 this.loadFileTags(request.fileId).then(tags => {
                     console.log('Content script responding with tags:', tags);
                     sendResponse({ tags: tags });

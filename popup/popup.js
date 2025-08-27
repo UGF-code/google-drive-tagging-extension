@@ -229,22 +229,39 @@ class DriveTaggingPopup {
                 });
             });
             
-            // Ask content script for current tags
+            // Ask content script for current tags with retry
             console.log('Popup sending getCurrentTags message to content script');
-            const contentResponse = await new Promise((resolve) => {
-                chrome.tabs.sendMessage(currentTab.id, {
-                    action: 'getCurrentTags',
-                    fileId: this.currentFileId
-                }, (response) => {
-                    if (chrome.runtime.lastError) {
-                        console.log('Content script not responding to getCurrentTags, using empty array');
-                        resolve({ tags: [] });
-                    } else {
-                        console.log('Popup received response from content script:', response);
-                        resolve(response || { tags: [] });
-                    }
+            let contentResponse = { tags: [] };
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+                contentResponse = await new Promise((resolve) => {
+                    chrome.tabs.sendMessage(currentTab.id, {
+                        action: 'getCurrentTags',
+                        fileId: this.currentFileId
+                    }, (response) => {
+                        if (chrome.runtime.lastError) {
+                            console.log(`Content script not responding to getCurrentTags (attempt ${retryCount + 1}/${maxRetries}), using empty array`);
+                            resolve({ tags: [] });
+                        } else {
+                            console.log('Popup received response from content script:', response);
+                            resolve(response || { tags: [] });
+                        }
+                    });
                 });
-            });
+                
+                if (contentResponse.tags && contentResponse.tags.length > 0) {
+                    console.log('Successfully got tags from content script:', contentResponse.tags);
+                    break;
+                }
+                
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    console.log(`Retrying getCurrentTags in 500ms (attempt ${retryCount + 1}/${maxRetries})`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
             
             const tags = contentResponse.tags || [];
             console.log('Tags loaded from content script:', tags);
