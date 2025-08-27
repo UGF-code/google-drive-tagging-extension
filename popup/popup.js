@@ -200,11 +200,17 @@ class DriveTaggingPopup {
             const localStorageKey = `drive_tags_${this.currentFileId}`;
             const storedTags = localStorage.getItem(localStorageKey);
             
+            console.log('Popup loading tags for file:', this.currentFileId);
+            console.log('localStorage key:', localStorageKey);
+            console.log('Stored tags from localStorage:', storedTags);
+            
             if (storedTags) {
                 this.currentTags = JSON.parse(storedTags);
                 this.renderCurrentTags();
                 console.log('Tags loaded from localStorage:', this.currentTags);
                 return;
+            } else {
+                console.log('No tags found in localStorage for this file');
             }
 
             // Fallback to background script (for future Drive API integration)
@@ -447,8 +453,26 @@ class DriveTaggingPopup {
     }
 
     extractFileId(url) {
-        const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        return match ? match[1] : null;
+        // Use the same patterns as content script for consistency
+        const patterns = [
+            /\/d\/([a-zA-Z0-9-_]+)/,  // /d/fileId (Google Docs, Sheets, Slides)
+            /id=([a-zA-Z0-9-_]+)/,    // ?id=fileId
+            /\/file\/d\/([a-zA-Z0-9-_]+)/,  // /file/d/fileId
+            /\/document\/d\/([a-zA-Z0-9-_]+)/,  // /document/d/fileId (Google Docs)
+            /\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/,  // /spreadsheets/d/fileId (Google Sheets)
+            /\/presentation\/d\/([a-zA-Z0-9-_]+)/   // /presentation/d/fileId (Google Slides)
+        ];
+        
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match) {
+                console.log('Popup extracted file ID:', match[1], 'from URL:', url);
+                return match[1];
+            }
+        }
+        
+        console.log('Popup could not extract file ID from URL:', url);
+        return null;
     }
 
     escapeHtml(text) {

@@ -545,6 +545,9 @@ class DriveContentScript {
             // Store in localStorage
             localStorage.setItem(storageKey, JSON.stringify(newTags));
             
+            console.log('Content script storing tags in localStorage:');
+            console.log('Storage key:', storageKey);
+            console.log('Tags to store:', newTags);
             console.log('Tags stored locally:', newTags);
             
             // Update the dialog immediately
