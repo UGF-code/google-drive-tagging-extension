@@ -13,17 +13,17 @@
 ## 📋 Phase 1: Architecture Refactor (IN PROGRESS)
 
 ### **1.1 Background Script - Central Controller**
-- [ ] **Backup current background script** as `background-old.js`
-- [ ] **Create new background script** with clean message handling
-- [ ] **Implement OAuth authentication** management
-- [ ] **Add Google Drive API operations**:
-  - [ ] `getFileTags(fileId)` - Retrieve tags from appProperties
-  - [ ] `addTagToFile(fileId, tag)` - Add tag to file
-  - [ ] `removeTagFromFile(fileId, tag)` - Remove tag from file
-  - [ ] `updateFileTags(fileId, tags)` - Update all tags for file
-- [ ] **Add message handler** for all operations
-- [ ] **Test authentication flow**
-- [ ] **Test basic tag CRUD operations**
+- [x] **Backup current background script** as `background-old.js`
+- [x] **Create new background script** with clean message handling
+- [x] **Implement OAuth authentication** management
+- [x] **Add Google Drive API operations**:
+  - [x] `getFileTags(fileId)` - Retrieve tags from appProperties
+  - [x] `addTagToFile(fileId, tag)` - Add tag to file
+  - [x] `removeTagFromFile(fileId, tag)` - Remove tag from file
+  - [x] `updateFileTags(fileId, tags)` - Update all tags for file
+- [x] **Add message handler** for all operations
+- [x] **Test authentication flow**
+- [x] **Test basic tag CRUD operations**
 
 ### **1.2 Message System Design**
 - [ ] **Define message types**:
