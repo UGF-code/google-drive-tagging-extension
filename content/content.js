@@ -388,6 +388,7 @@ class DriveContentScript {
     setupDialogEvents(dialog, fileId = null) {
         const closeBtn = dialog.querySelector('.dialog-close');
         const cancelBtn = dialog.querySelector('.dialog-cancel');
+        const saveBtn = dialog.querySelector('.dialog-save');
         const overlay = dialog.querySelector('.dialog-overlay');
         
         // Close dialog
@@ -397,6 +398,10 @@ class DriveContentScript {
         
         closeBtn?.addEventListener('click', closeDialog);
         cancelBtn?.addEventListener('click', closeDialog);
+        saveBtn?.addEventListener('click', () => {
+            console.log('Save button clicked');
+            closeDialog();
+        });
         overlay?.addEventListener('click', (e) => {
             if (e.target === overlay) closeDialog();
         });
@@ -413,11 +418,18 @@ class DriveContentScript {
             });
             
             // Add tag
-            const addTag = () => {
+            const addTag = async () => {
                 const tagText = tagInput.value.trim();
                 if (tagText) {
-                    this.addTagToFile(fileId, tagText);
-                    tagInput.value = '';
+                    console.log('Adding tag:', tagText, 'to file:', fileId);
+                    try {
+                        await this.addTagToFile(fileId, tagText);
+                        tagInput.value = '';
+                        console.log('Tag added successfully');
+                    } catch (error) {
+                        console.error('Failed to add tag:', error);
+                        alert('Failed to add tag. Please try again.');
+                    }
                 }
             };
             
@@ -569,16 +581,20 @@ class DriveContentScript {
             const fileElement = e.target.closest('[data-target="docs-title-input"], [data-id], a[href*="/d/"]');
             if (fileElement) {
                 console.log('File element detected, showing custom menu');
-                e.preventDefault();
-                e.stopPropagation();
                 
-                // Show our custom menu
-                const customMenu = document.getElementById('drive-tagging-context-menu');
-                if (customMenu) {
-                    customMenu.style.display = 'block';
-                    customMenu.style.left = e.pageX + 'px';
-                    customMenu.style.top = e.pageY + 'px';
-                }
+                // Don't prevent default - let Google Drive's menu show too
+                // e.preventDefault();
+                // e.stopPropagation();
+                
+                // Show our custom menu after a short delay
+                setTimeout(() => {
+                    const customMenu = document.getElementById('drive-tagging-context-menu');
+                    if (customMenu) {
+                        customMenu.style.display = 'block';
+                        customMenu.style.left = e.pageX + 'px';
+                        customMenu.style.top = e.pageY + 'px';
+                    }
+                }, 100);
             }
         });
     }
