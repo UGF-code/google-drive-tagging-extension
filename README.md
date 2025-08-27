@@ -35,6 +35,51 @@ A Chrome extension that adds powerful tagging capabilities to Google Drive, allo
 - [ ] Export/import tag data
 - [ ] Performance optimizations
 
+## 🏗️ New Architecture Strategy
+
+### **Core Principle: Clean Separation of Concerns**
+
+Our extension follows a clean, modular architecture where each component has a single responsibility:
+
+#### **1. Background Script - Central Controller**
+- **OAuth Authentication**: Manages Google Drive API authentication
+- **Google Drive API Operations**: All CRUD operations for tags/appProperties
+- **Message Handling**: Receives requests from popup and content scripts
+- **Data Processing**: Performs operations and sends back results
+- **Purpose**: Acts as the secure, persistent, and privileged controller
+
+#### **2. Popup Script - UI Interface**
+- **User Interactions**: Handles all popup UI interactions
+- **Message Sending**: Sends user requests to background script
+- **Response Handling**: Updates UI with data from background script
+- **No Direct API Calls**: Never directly accesses Google Drive API
+- **Purpose**: Clean, quick-access control panel for file-level tag management
+
+#### **3. Content Script - Native Integration**
+- **UI Injection**: Injects custom UI into Google Drive pages
+- **Event Detection**: Detects user actions within Drive
+- **Message Relay**: Sends events to background script for processing
+- **Tag Display**: Shows tags on files via injected UI components
+- **Purpose**: Enhances native Google Drive experience with custom tagging
+
+### **Communication Flow**
+```
+User Action → UI Component → Background Script → Google Drive API → Response → UI Update
+```
+
+### **Benefits of This Architecture**
+- ✅ **Reliable**: Single source of truth for all operations
+- ✅ **Secure**: All API calls go through privileged background script
+- ✅ **Maintainable**: Clear separation of concerns
+- ✅ **Scalable**: Easy to add new features
+- ✅ **Testable**: Each component can be tested independently
+
+### **Development Phases**
+1. **Phase 1**: Architecture Refactor - Implement clean message passing system
+2. **Phase 2**: Core Features - Basic tag CRUD operations via background script
+3. **Phase 3**: Advanced Features - Batch operations and search capabilities
+4. **Phase 4**: Enhanced UX - Analytics, categories, and advanced filtering
+
 ## 🛠 Getting Started
 
 ### Prerequisites
