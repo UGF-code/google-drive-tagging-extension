@@ -235,7 +235,14 @@ class DriveContentScript {
 
     // Handle messages from popup and background
     handleMessage(request, sender, sendResponse) {
+        console.log('Content script received message:', request.action, request);
+        
         switch (request.action) {
+            case 'test':
+                console.log('Content script received test message:', request.message);
+                sendResponse({ success: true, message: 'Hello from content script' });
+                break;
+                
             case 'getCurrentFileName':
                 sendResponse({
                     fileName: this.getCurrentFileName(),

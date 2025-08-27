@@ -202,6 +202,18 @@ class DriveTaggingPopup {
             
             console.log('Popup loading tags for file:', this.currentFileId);
             
+            // Test message communication first
+            console.log('Popup sending test message to content script');
+            const testResponse = await new Promise((resolve) => {
+                chrome.tabs.sendMessage(currentTab.id, {
+                    action: 'test',
+                    message: 'Hello from popup'
+                }, (response) => {
+                    console.log('Popup received test response:', response);
+                    resolve(response);
+                });
+            });
+            
             // Ask content script for current tags
             console.log('Popup sending getCurrentTags message to content script');
             const contentResponse = await new Promise((resolve) => {
