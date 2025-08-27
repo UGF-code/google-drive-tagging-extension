@@ -262,24 +262,13 @@ class DriveTaggingPopup {
         try {
             this.showLoading();
             
-            // Get existing tags from content script via message
-            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-            const currentTab = tabs[0];
-            
-            // Ask content script for current tags
-            const contentResponse = await new Promise((resolve) => {
-                chrome.tabs.sendMessage(currentTab.id, {
-                    action: 'getCurrentTags',
-                    fileId: this.currentFileId
-                }, (response) => {
-                    resolve(response || { tags: [] });
-                });
-            });
-            
-            const existingTags = contentResponse.tags || [];
+            // Get existing tags directly from localStorage
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            const existingTagsJson = localStorage.getItem(localStorageKey);
+            const existingTags = existingTagsJson ? JSON.parse(existingTagsJson) : [];
             
             console.log('Popup merging tags:');
-            console.log('Existing tags from content script:', existingTags);
+            console.log('Existing tags from localStorage:', existingTags);
             console.log('Current tags in popup:', this.currentTags);
             console.log('New tag to add:', tagText);
             
@@ -288,7 +277,6 @@ class DriveTaggingPopup {
             console.log('Merged tags:', allTags);
             
             // Store merged tags directly in localStorage (same key as content script)
-            const localStorageKey = `drive_tags_${this.currentFileId}`;
             localStorage.setItem(localStorageKey, JSON.stringify(allTags));
             console.log('Popup stored tags in localStorage:', allTags);
             
