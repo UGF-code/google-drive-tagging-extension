@@ -465,6 +465,16 @@ class DriveContentScript {
             if (addBtn) {
                 console.log('Adding click listener to Add button');
                 addBtn.addEventListener('click', addTag);
+                
+                // Test if button is clickable
+                addBtn.addEventListener('click', () => {
+                    console.log('🎯 ADD BUTTON CLICKED - TEST EVENT');
+                });
+                
+                // Also try mousedown event
+                addBtn.addEventListener('mousedown', () => {
+                    console.log('🎯 ADD BUTTON MOUSEDOWN - TEST EVENT');
+                });
             } else {
                 console.error('Add button not found!');
             }
