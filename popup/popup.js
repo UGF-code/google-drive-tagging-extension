@@ -196,6 +196,18 @@ class DriveTaggingPopup {
         if (!this.currentFileId) return;
 
         try {
+            // Try to get tags from localStorage first (for consistency with content script)
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            const storedTags = localStorage.getItem(localStorageKey);
+            
+            if (storedTags) {
+                this.currentTags = JSON.parse(storedTags);
+                this.renderCurrentTags();
+                console.log('Tags loaded from localStorage:', this.currentTags);
+                return;
+            }
+
+            // Fallback to background script (for future Drive API integration)
             const response = await this.sendMessage({
                 action: 'getFileTags',
                 fileId: this.currentFileId
@@ -205,11 +217,13 @@ class DriveTaggingPopup {
                 this.currentTags = response.tags;
                 this.renderCurrentTags();
             } else {
-                this.showError('Failed to load tags');
+                this.currentTags = [];
+                this.renderCurrentTags();
             }
         } catch (error) {
             console.error('Failed to load current tags:', error);
-            this.showError('Failed to load current tags');
+            this.currentTags = [];
+            this.renderCurrentTags();
         }
     }
 
@@ -228,18 +242,25 @@ class DriveTaggingPopup {
             this.showLoading();
             
             const newTags = [...this.currentTags, tagText];
+            
+            // Store in localStorage for consistency with content script
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            localStorage.setItem(localStorageKey, JSON.stringify(newTags));
+            
+            // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
                 action: 'updateFileTags',
                 fileId: this.currentFileId,
                 tags: newTags
             });
 
-            if (response.success) {
+            if (response.success || response.error === 'Background script not available') {
                 this.currentTags = newTags;
                 this.renderCurrentTags();
                 this.tagInput.value = '';
                 this.loadTagSuggestions();
                 this.hideError(); // Clear any previous errors
+                console.log('Tag added successfully via localStorage:', newTags);
             } else {
                 this.showError(response.error || 'Failed to add tag');
             }
@@ -257,16 +278,23 @@ class DriveTaggingPopup {
 
         try {
             const newTags = this.currentTags.filter(tag => tag !== tagToRemove);
+            
+            // Store in localStorage for consistency with content script
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            localStorage.setItem(localStorageKey, JSON.stringify(newTags));
+            
+            // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
                 action: 'updateFileTags',
                 fileId: this.currentFileId,
                 tags: newTags
             });
 
-            if (response.success) {
+            if (response.success || response.error === 'Background script not available') {
                 this.currentTags = newTags;
                 this.renderCurrentTags();
                 this.loadTagSuggestions();
+                console.log('Tag removed successfully via localStorage:', newTags);
             } else {
                 this.showError('Failed to remove tag');
             }

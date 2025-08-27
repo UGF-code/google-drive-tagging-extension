@@ -129,6 +129,7 @@
   - [x] Click "Tag File" and add tags
   - [x] Verify tags are saved and displayed
   - [x] Test with different image formats (JPG, PNG, GIF, WebP)
+  - [ ] **Verify file ID detection** (check console for real file ID, not null)
 
 - [ ] **Videos (MP4, MOV, AVI, etc.)**
   - [ ] Upload a video to Google Drive
@@ -150,6 +151,7 @@
   - [x] Verify "Tag File" appears in context menu
   - [x] Click "Tag File" and add tags
   - [x] Verify tags are saved and displayed
+  - [ ] **Verify file ID detection** (check console for real file ID, not null)
 
 - [x] **PDF Documents**
   - [x] Upload a PDF to Google Drive
@@ -157,6 +159,7 @@
   - [x] Verify "Tag File" appears in context menu
   - [x] Click "Tag File" and add tags
   - [x] Verify tags are saved and displayed
+  - [ ] **Verify file ID detection** (check console for real file ID, not null)
 
 - [ ] **Compressed Files (ZIP, RAR, etc.)**
   - [ ] Upload a compressed file to Google Drive
@@ -164,6 +167,14 @@
   - [ ] Verify "Tag File" appears in context menu
   - [ ] Click "Tag File" and add tags
   - [ ] Verify tags are saved and displayed
+
+### **File ID Detection Testing**
+- [ ] **Console Verification**
+  - [ ] Open browser console (F12)
+  - [ ] Right-click on any file
+  - [ ] Look for "Extracted file ID from clicked element: [fileId]"
+  - [ ] Verify file ID is not null and looks like a real Google Drive ID
+  - [ ] Test with images, docs, PDFs to ensure consistent detection
 
 ### **File Size and Performance**
 - [ ] Test with very large files (>100MB)
