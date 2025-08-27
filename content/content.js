@@ -6,6 +6,7 @@ console.log('🚀 CONTENT SCRIPT LOADED - VERSION WITH DEBUGGING');
 class DriveContentScript {
     constructor() {
         this.currentFileId = null;
+        this.rightClickedFileId = null; // Store file ID from right-click
         this.selectedFiles = [];
         this.isInitialized = false;
         
@@ -639,8 +640,10 @@ class DriveContentScript {
             console.log('Custom menu clicked, action:', action);
             
             if (action === 'tagFile') {
-                console.log('Opening tag dialog for file ID:', this.currentFileId);
-                this.openTagDialog(this.currentFileId);
+                // Use the file ID from right-click, fallback to current file ID
+                const fileId = this.rightClickedFileId || this.currentFileId;
+                console.log('Opening tag dialog for file ID:', fileId);
+                this.openTagDialog(fileId);
             } else if (action === 'batchTag') {
                 console.log('Opening batch tag dialog');
                 this.openBatchTagDialog();
@@ -672,6 +675,13 @@ class DriveContentScript {
             const fileElement = e.target.closest('[data-target="docs-title-input"], [data-id], a[href*="/d/"]');
             if (fileElement) {
                 console.log('File element detected, showing custom menu');
+                
+                // Extract file ID from the clicked element
+                const fileId = this.extractFileIdFromElement(fileElement);
+                console.log('Extracted file ID from clicked element:', fileId);
+                
+                // Store the file ID for the context menu
+                this.rightClickedFileId = fileId;
                 
                 // Don't prevent default - let Google Drive's menu show too
                 // e.preventDefault();
