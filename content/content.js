@@ -266,14 +266,22 @@ class DriveContentScript {
 
     // Open tag dialog for a specific file
     openTagDialog(fileId) {
+        console.log('🎯 openTagDialog called with fileId:', fileId);
+        
         // Create a modal dialog for tagging
         const dialog = this.createTagDialog(fileId);
+        console.log('🎯 Dialog created:', dialog);
+        
         document.body.appendChild(dialog);
+        console.log('🎯 Dialog appended to body');
         
         // Focus on the dialog
         const input = dialog.querySelector('.tag-input');
         if (input) {
             input.focus();
+            console.log('🎯 Input focused');
+        } else {
+            console.error('🎯 Input not found in dialog');
         }
     }
 
@@ -628,9 +636,13 @@ class DriveContentScript {
         // Add event listeners
         customMenu.addEventListener('click', (e) => {
             const action = e.target.closest('.menu-item')?.dataset.action;
+            console.log('Custom menu clicked, action:', action);
+            
             if (action === 'tagFile') {
+                console.log('Opening tag dialog for file ID:', this.currentFileId);
                 this.openTagDialog(this.currentFileId);
             } else if (action === 'batchTag') {
+                console.log('Opening batch tag dialog');
                 this.openBatchTagDialog();
             }
         });
