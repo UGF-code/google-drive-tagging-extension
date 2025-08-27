@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive Tagging</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🚀 Drive Tagging</h1>
+            <div class="auth-status" id="authStatus">
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span class="status-text" id="statusText">Checking...</span>
+                <button id="reauthBtn" class="btn btn-small" style="display: none;">Reconnect</button>
+            </div>
+        </header>
+
+        <!-- Authentication Section -->
+        <div class="auth-section" id="authSection">
+            <div class="auth-content">
+                <p>Connect your Google Drive to start tagging files</p>
+                <button id="loginBtn" class="btn btn-primary">Connect Google Drive</button>
+            </div>
+        </div>
+
+        <!-- Main Content (hidden until authenticated) -->
+        <div class="main-content" id="mainContent" style="display: none;">
+            <!-- Current File Section -->
+            <div class="section">
+                <h3>📁 Current File</h3>
+                <div class="file-info" id="fileInfo">
+                    <div class="file-name" id="fileName">No file selected</div>
+                    <div class="file-id" id="fileId"></div>
+                </div>
+            </div>
+
+            <!-- Tag Management Section -->
+            <div class="section">
+                <h3>🏷️ Tags</h3>
+                <div class="tag-input-container">
+                    <input type="text" id="tagInput" placeholder="Add a tag..." class="tag-input">
+                    <button id="addTagBtn" class="btn btn-secondary">Add</button>
+                </div>
+                
+                <div class="current-tags" id="currentTags">
+                    <div class="no-tags">No tags yet. Add your first tag above!</div>
+                </div>
+            </div>
+
+            <!-- Tag Suggestions -->
+            <div class="section">
+                <h3>💡 Tag Suggestions</h3>
+                <div class="tag-suggestions" id="tagSuggestions">
+                    <div class="no-suggestions">No suggestions yet. Start tagging files to see suggestions!</div>
+                </div>
+            </div>
+
+            <!-- Batch Operations -->
+            <div class="section">
+                <h3>📦 Batch Operations</h3>
+                <div class="batch-controls">
+                    <button id="selectFilesBtn" class="btn btn-secondary">Select Multiple Files</button>
+                    <button id="batchTagBtn" class="btn btn-primary" disabled>Batch Tag Selected</button>
+                </div>
+                <div class="selected-files" id="selectedFiles">
+                    <div class="no-selection">No files selected for batch operations</div>
+                </div>
+            </div>
+
+            <!-- Search & Filter -->
+            <div class="section">
+                <h3>🔍 Search Tags</h3>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search tags..." class="search-input">
+                    <button id="searchBtn" class="btn btn-secondary">Search</button>
+                </div>
+                <div class="search-results" id="searchResults">
+                    <div class="no-results">Search for tags to see matching files</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+
+        <!-- Error Messages -->
+        <div class="error-message" id="errorMessage" style="display: none;">
+            <span id="errorText"></span>
+            <button id="dismissError" class="btn btn-small">×</button>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>

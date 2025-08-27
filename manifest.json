@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Google Drive Tagging Extension",
+  "version": "1.0.0",
+  "description": "Add custom tags to Google Drive files for better organization and filtering",
+  
+  "permissions": [
+    "identity",
+    "storage",
+    "contextMenus",
+    "activeTab"
+  ],
+  
+  "host_permissions": [
+    "https://drive.google.com/*",
+    "https://docs.google.com/*",
+    "https://sheets.google.com/*",
+    "https://slides.google.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  
+  "oauth2": {
+    "client_id": "422198538359-mthl85nqd1vgr1vfdk5itkc4gesv7bah.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive"
+    ]
+  },
+  
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": [
+        "https://drive.google.com/*",
+        "https://docs.google.com/*",
+        "https://sheets.google.com/*",
+        "https://slides.google.com/*"
+      ],
+      "js": ["content/content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Drive Tagging"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["popup/*", "utils/*"],
+      "matches": ["https://drive.google.com/*"]
+    }
+  ]
+}
