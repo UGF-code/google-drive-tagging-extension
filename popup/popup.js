@@ -219,14 +219,29 @@ class DriveTaggingPopup {
                 });
             });
             
-            // Try to get tags directly from localStorage (same key as content script)
-            console.log('Popup trying to get tags directly from localStorage');
-            const localStorageKey = `drive_tags_${this.currentFileId}`;
-            const storedTagsJson = localStorage.getItem(localStorageKey);
-            const tags = storedTagsJson ? JSON.parse(storedTagsJson) : [];
-            
-            console.log('Popup localStorage key:', localStorageKey);
-            console.log('Popup found tags in localStorage:', tags);
+            // Get tags from the web page context (same as content script)
+            console.log('Popup trying to get tags from web page context');
+            const tags = await new Promise((resolve) => {
+                chrome.scripting.executeScript({
+                    target: { tabId: currentTab.id },
+                    func: (fileId) => {
+                        const key = `drive_tags_${fileId}`;
+                        const stored = localStorage.getItem(key);
+                        const tags = stored ? JSON.parse(stored) : [];
+                        console.log('Web page context - localStorage key:', key);
+                        console.log('Web page context - found tags:', tags);
+                        return tags;
+                    },
+                    args: [this.currentFileId]
+                }).then((results) => {
+                    const tags = results[0].result || [];
+                    console.log('Popup received tags from web page context:', tags);
+                    resolve(tags);
+                }).catch((error) => {
+                    console.error('Failed to get tags from web page context:', error);
+                    resolve([]);
+                });
+            });
             console.log('Tags loaded from content script:', tags);
             
             // Always update currentTags and render, even if empty
@@ -276,9 +291,25 @@ class DriveTaggingPopup {
             const allTags = [...new Set([...existingTags, ...this.currentTags, tagText])];
             console.log('Merged tags:', allTags);
             
-            // Store merged tags directly in localStorage (same key as content script)
-            localStorage.setItem(localStorageKey, JSON.stringify(allTags));
-            console.log('Popup stored tags in localStorage:', allTags);
+            // Store merged tags in web page context (same as content script)
+            await new Promise((resolve) => {
+                chrome.scripting.executeScript({
+                    target: { tabId: currentTab.id },
+                    func: (fileId, tags) => {
+                        const key = `drive_tags_${fileId}`;
+                        localStorage.setItem(key, JSON.stringify(tags));
+                        console.log('Web page context - stored tags:', tags);
+                        return true;
+                    },
+                    args: [this.currentFileId, allTags]
+                }).then(() => {
+                    console.log('Popup stored tags in web page context:', allTags);
+                    resolve();
+                }).catch((error) => {
+                    console.error('Failed to store tags in web page context:', error);
+                    resolve();
+                });
+            });
             
             // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
@@ -312,9 +343,28 @@ class DriveTaggingPopup {
         try {
             const newTags = this.currentTags.filter(tag => tag !== tagToRemove);
             
-            // Store in localStorage for consistency with content script
-            const localStorageKey = `drive_tags_${this.currentFileId}`;
-            localStorage.setItem(localStorageKey, JSON.stringify(newTags));
+            // Store in web page context for consistency with content script
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            const currentTab = tabs[0];
+            
+            await new Promise((resolve) => {
+                chrome.scripting.executeScript({
+                    target: { tabId: currentTab.id },
+                    func: (fileId, tags) => {
+                        const key = `drive_tags_${fileId}`;
+                        localStorage.setItem(key, JSON.stringify(tags));
+                        console.log('Web page context - removed tag, stored:', tags);
+                        return true;
+                    },
+                    args: [this.currentFileId, newTags]
+                }).then(() => {
+                    console.log('Popup stored updated tags in web page context:', newTags);
+                    resolve();
+                }).catch((error) => {
+                    console.error('Failed to store tags in web page context:', error);
+                    resolve();
+                });
+            });
             
             // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
