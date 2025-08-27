@@ -1,6 +1,8 @@
 // Google Drive Tagging Extension - Content Script
 // This script runs on Google Drive pages and integrates with the Drive interface
 
+console.log('🚀 CONTENT SCRIPT LOADED - VERSION WITH DEBUGGING');
+
 class DriveContentScript {
     constructor() {
         this.currentFileId = null;
