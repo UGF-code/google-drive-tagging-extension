@@ -209,8 +209,23 @@ class DriveTaggingPopup {
                     action: 'test',
                     message: 'Hello from popup'
                 }, (response) => {
-                    console.log('Popup received test response:', response);
-                    resolve(response);
+                    if (chrome.runtime.lastError) {
+                        console.log('Content script not available, injecting it...');
+                        // Inject content script if not available
+                        chrome.scripting.executeScript({
+                            target: { tabId: currentTab.id },
+                            files: ['content/content.js']
+                        }).then(() => {
+                            console.log('Content script injected successfully');
+                            resolve({ success: true, message: 'Content script injected' });
+                        }).catch(error => {
+                            console.error('Failed to inject content script:', error);
+                            resolve({ success: false, error: error.message });
+                        });
+                    } else {
+                        console.log('Popup received test response:', response);
+                        resolve(response);
+                    }
                 });
             });
             
@@ -221,8 +236,13 @@ class DriveTaggingPopup {
                     action: 'getCurrentTags',
                     fileId: this.currentFileId
                 }, (response) => {
-                    console.log('Popup received response from content script:', response);
-                    resolve(response || { tags: [] });
+                    if (chrome.runtime.lastError) {
+                        console.log('Content script not responding to getCurrentTags, using empty array');
+                        resolve({ tags: [] });
+                    } else {
+                        console.log('Popup received response from content script:', response);
+                        resolve(response || { tags: [] });
+                    }
                 });
             });
             
