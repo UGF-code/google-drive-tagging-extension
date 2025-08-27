@@ -230,6 +230,7 @@ class DriveTaggingPopup {
                         const tags = stored ? JSON.parse(stored) : [];
                         console.log('Web page context - localStorage key:', key);
                         console.log('Web page context - found tags:', tags);
+                        console.log('Web page context - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
                         return tags;
                     },
                     args: [this.currentFileId]

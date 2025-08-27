@@ -585,6 +585,7 @@ class DriveContentScript {
             console.log('Storage key:', storageKey);
             console.log('Tags to store:', newTags);
             console.log('Tags stored locally:', newTags);
+            console.log('Content script - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
             
             // Update the dialog immediately
             const dialog = document.querySelector('.drive-tagging-dialog');
