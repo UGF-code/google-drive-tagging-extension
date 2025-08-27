@@ -247,11 +247,16 @@ class DriveTaggingPopup {
         try {
             this.showLoading();
             
-            const newTags = [...this.currentTags, tagText];
-            
-            // Store in localStorage for consistency with content script
+            // Get existing tags from localStorage to merge properly
             const localStorageKey = `drive_tags_${this.currentFileId}`;
-            localStorage.setItem(localStorageKey, JSON.stringify(newTags));
+            const existingTagsJson = localStorage.getItem(localStorageKey);
+            const existingTags = existingTagsJson ? JSON.parse(existingTagsJson) : [];
+            
+            // Merge with existing tags and remove duplicates
+            const allTags = [...new Set([...existingTags, ...this.currentTags, tagText])];
+            
+            // Store merged tags in localStorage
+            localStorage.setItem(localStorageKey, JSON.stringify(allTags));
             
             // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
@@ -261,12 +266,12 @@ class DriveTaggingPopup {
             });
 
             if (response.success || response.error === 'Background script not available') {
-                this.currentTags = newTags;
+                this.currentTags = allTags;
                 this.renderCurrentTags();
                 this.tagInput.value = '';
                 this.loadTagSuggestions();
                 this.hideError(); // Clear any previous errors
-                console.log('Tag added successfully via localStorage:', newTags);
+                console.log('Tag added successfully via localStorage:', allTags);
             } else {
                 this.showError(response.error || 'Failed to add tag');
             }

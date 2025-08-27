@@ -539,8 +539,8 @@ class DriveContentScript {
             const localTags = localStorage.getItem(storageKey);
             const currentTags = localTags ? JSON.parse(localTags) : [];
             
-            // Add new tag
-            const newTags = [...currentTags, tag];
+            // Add new tag and remove duplicates
+            const newTags = [...new Set([...currentTags, tag])];
             
             // Store in localStorage
             localStorage.setItem(storageKey, JSON.stringify(newTags));
