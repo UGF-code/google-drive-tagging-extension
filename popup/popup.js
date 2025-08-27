@@ -204,6 +204,12 @@ class DriveTaggingPopup {
             console.log('localStorage key:', localStorageKey);
             console.log('Stored tags from localStorage:', storedTags);
             
+            // Test localStorage access
+            console.log('localStorage available:', typeof localStorage !== 'undefined');
+            console.log('localStorage.getItem test:', localStorage.getItem('test'));
+            localStorage.setItem('test', 'popup-test');
+            console.log('localStorage.setItem test successful');
+            
             if (storedTags) {
                 this.currentTags = JSON.parse(storedTags);
                 this.renderCurrentTags();
@@ -268,7 +274,7 @@ class DriveTaggingPopup {
             const response = await this.sendMessage({
                 action: 'updateFileTags',
                 fileId: this.currentFileId,
-                tags: newTags
+                tags: allTags
             });
 
             if (response.success || response.error === 'Background script not available') {
