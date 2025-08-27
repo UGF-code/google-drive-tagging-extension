@@ -93,7 +93,12 @@ class DriveTaggingPopup {
                 this.loadCurrentFile();
                 this.loadTagSuggestions();
             } else {
+                console.log('Authentication failed:', response.error);
                 this.setAuthenticated(false);
+                // Don't show error if background script is just not available
+                if (response.error !== 'Background script not available') {
+                    this.showError('Failed to check authentication status');
+                }
             }
         } catch (error) {
             console.error('Authentication check failed:', error);
@@ -396,13 +401,20 @@ class DriveTaggingPopup {
     // Utility functions
     async sendMessage(message) {
         return new Promise((resolve, reject) => {
-            chrome.runtime.sendMessage(message, (response) => {
-                if (chrome.runtime.lastError) {
-                    reject(new Error(chrome.runtime.lastError.message));
-                } else {
-                    resolve(response);
-                }
-            });
+            try {
+                chrome.runtime.sendMessage(message, (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.log('Background script communication failed:', chrome.runtime.lastError.message);
+                        // Return a mock response for now
+                        resolve({ success: false, error: 'Background script not available' });
+                    } else {
+                        resolve(response);
+                    }
+                });
+            } catch (error) {
+                console.log('Failed to send message to background script:', error);
+                resolve({ success: false, error: 'Background script not available' });
+            }
         });
     }
 
