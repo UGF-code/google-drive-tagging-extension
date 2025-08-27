@@ -13,29 +13,36 @@ const OAUTH_CONFIG = {
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Google Drive Tagging Extension installed');
   
-  // Create context menu items
-  chrome.contextMenus.create({
-    id: 'tagFile',
-    title: 'Tag File',
-    contexts: ['all'],
-    documentUrlPatterns: [
-      'https://drive.google.com/*',
-      'https://docs.google.com/*',
-      'https://sheets.google.com/*',
-      'https://slides.google.com/*'
-    ]
-  });
-  
-  chrome.contextMenus.create({
-    id: 'batchTag',
-    title: 'Batch Tag Files',
-    contexts: ['selection'],
-    documentUrlPatterns: [
-      'https://drive.google.com/*',
-      'https://docs.google.com/*',
-      'https://sheets.google.com/*',
-      'https://slides.google.com/*'
-    ]
+  // Remove any existing context menus first
+  chrome.contextMenus.removeAll(() => {
+    console.log('Removed existing context menus');
+    
+    // Create context menu items
+    chrome.contextMenus.create({
+      id: 'tagFile',
+      title: 'Tag File',
+      contexts: ['all'],
+      documentUrlPatterns: ['https://drive.google.com/*']
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Error creating tagFile context menu:', chrome.runtime.lastError);
+      } else {
+        console.log('Tag File context menu created successfully');
+      }
+    });
+    
+    chrome.contextMenus.create({
+      id: 'batchTag',
+      title: 'Batch Tag Files',
+      contexts: ['selection'],
+      documentUrlPatterns: ['https://drive.google.com/*']
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Error creating batchTag context menu:', chrome.runtime.lastError);
+      } else {
+        console.log('Batch Tag context menu created successfully');
+      }
+    });
   });
 });
 
