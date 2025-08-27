@@ -18,24 +18,35 @@ chrome.runtime.onInstalled.addListener(() => {
     id: 'tagFile',
     title: 'Tag File',
     contexts: ['all'],
-    documentUrlPatterns: ['https://drive.google.com/*']
+    documentUrlPatterns: [
+      'https://drive.google.com/*',
+      'https://docs.google.com/*',
+      'https://sheets.google.com/*',
+      'https://slides.google.com/*'
+    ]
   });
   
   chrome.contextMenus.create({
     id: 'batchTag',
     title: 'Batch Tag Files',
     contexts: ['selection'],
-    documentUrlPatterns: ['https://drive.google.com/*']
+    documentUrlPatterns: [
+      'https://drive.google.com/*',
+      'https://docs.google.com/*',
+      'https://sheets.google.com/*',
+      'https://slides.google.com/*'
+    ]
   });
 });
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'tagFile') {
-    // Single file tagging
+    // Single file tagging - send message to content script to detect clicked file
     chrome.tabs.sendMessage(tab.id, {
-      action: 'openTagDialog',
-      fileId: getFileIdFromUrl(tab.url)
+      action: 'openTagDialogForClickedFile',
+      pageUrl: tab.url,
+      linkUrl: info.linkUrl
     });
   } else if (info.menuItemId === 'batchTag') {
     // Batch file tagging

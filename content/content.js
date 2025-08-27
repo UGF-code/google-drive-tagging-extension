@@ -250,6 +250,10 @@ class DriveContentScript {
                 this.openTagDialog(request.fileId);
                 break;
                 
+            case 'openTagDialogForClickedFile':
+                this.openTagDialogForClickedFile(request.pageUrl, request.linkUrl);
+                break;
+                
             case 'openBatchTagDialog':
                 this.openBatchTagDialog(request.selection);
                 break;
@@ -274,6 +278,38 @@ class DriveContentScript {
         const input = dialog.querySelector('.tag-input');
         if (input) {
             input.focus();
+        }
+    }
+
+    // Open tag dialog for clicked file (from context menu)
+    openTagDialogForClickedFile(pageUrl, linkUrl) {
+        let fileId = null;
+        
+        // Try to extract file ID from link URL
+        if (linkUrl) {
+            fileId = this.extractFileIdFromUrl(linkUrl);
+        }
+        
+        // If no file ID from link, try to detect from current page
+        if (!fileId) {
+            fileId = this.extractFileIdFromUrl(pageUrl);
+        }
+        
+        // If still no file ID, try to detect from recently clicked element
+        if (!fileId) {
+            // Look for file elements in the page
+            const fileElements = document.querySelectorAll('[data-target="docs-title-input"], [data-id], a[href*="/d/"]');
+            if (fileElements.length > 0) {
+                // Use the first file element found
+                fileId = this.extractFileIdFromElement(fileElements[0]);
+            }
+        }
+        
+        if (fileId) {
+            this.openTagDialog(fileId);
+        } else {
+            // Show error dialog
+            this.showErrorDialog('Could not detect file. Please open the file first or use the extension popup.');
         }
     }
 
@@ -446,6 +482,32 @@ class DriveContentScript {
     openCustomPopup() {
         // This would create a custom popup overlay on the Drive page
         console.log('Custom popup would open here');
+    }
+
+    // Show error dialog
+    showErrorDialog(message) {
+        const dialog = document.createElement('div');
+        dialog.className = 'drive-tagging-dialog';
+        dialog.innerHTML = `
+            <div class="dialog-overlay">
+                <div class="dialog-content">
+                    <div class="dialog-header">
+                        <h3>Error</h3>
+                        <button class="dialog-close">×</button>
+                    </div>
+                    <div class="dialog-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="dialog-footer">
+                        <button class="dialog-cancel">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add event listeners
+        this.setupDialogEvents(dialog);
+        document.body.appendChild(dialog);
     }
 
     // Inject custom styles

@@ -58,7 +58,7 @@
 - [x] Add 3-5 different tags to same file
 - [x] Verify all tags display correctly
 - [x] Verify tags are saved to file
-- [x] Test with duplicate tags (should be prevented) - **ISSUE: Duplicates allowed**
+- [x] Test with duplicate tags (should be prevented) - **FIXED: Duplicates prevented**
 
 ### **Removing Tags**
 - [x] Add a tag to a file
