@@ -33,6 +33,8 @@ class DriveContentScript {
         if (this.isInitialized) return;
         
         console.log('Setting up Google Drive Tagging integration...');
+        console.log('Current URL:', window.location.href);
+        console.log('Document ready state:', document.readyState);
         
         // Extract current file ID from URL
         this.updateCurrentFile();
@@ -45,6 +47,9 @@ class DriveContentScript {
         
         // Setup context menu integration
         this.setupContextMenu();
+        
+        // Test if we can inject custom context menu
+        this.injectCustomContextMenu();
         
         this.isInitialized = true;
     }
@@ -510,6 +515,74 @@ class DriveContentScript {
         document.body.appendChild(dialog);
     }
 
+    // Inject custom context menu into Google Drive
+    injectCustomContextMenu() {
+        console.log('Attempting to inject custom context menu...');
+        
+        // Create custom context menu
+        const customMenu = document.createElement('div');
+        customMenu.id = 'drive-tagging-context-menu';
+        customMenu.className = 'drive-tagging-context-menu';
+        customMenu.innerHTML = `
+            <div class="menu-item" data-action="tagFile">
+                <span class="menu-icon">🏷️</span>
+                <span class="menu-text">Tag File</span>
+            </div>
+            <div class="menu-item" data-action="batchTag">
+                <span class="menu-icon">📋</span>
+                <span class="menu-text">Batch Tag Files</span>
+            </div>
+        `;
+        
+        // Add event listeners
+        customMenu.addEventListener('click', (e) => {
+            const action = e.target.closest('.menu-item')?.dataset.action;
+            if (action === 'tagFile') {
+                this.openTagDialog(this.currentFileId);
+            } else if (action === 'batchTag') {
+                this.openBatchTagDialog();
+            }
+        });
+        
+        // Hide menu when clicking outside
+        document.addEventListener('click', () => {
+            customMenu.style.display = 'none';
+        });
+        
+        // Add to page
+        document.body.appendChild(customMenu);
+        console.log('Custom context menu injected');
+        
+        // Override Google Drive's context menu
+        this.overrideGoogleDriveContextMenu();
+    }
+
+    // Override Google Drive's context menu
+    overrideGoogleDriveContextMenu() {
+        console.log('Attempting to override Google Drive context menu...');
+        
+        // Listen for right-click events
+        document.addEventListener('contextmenu', (e) => {
+            console.log('Right-click detected on:', e.target);
+            
+            // Check if we're on a file element
+            const fileElement = e.target.closest('[data-target="docs-title-input"], [data-id], a[href*="/d/"]');
+            if (fileElement) {
+                console.log('File element detected, showing custom menu');
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Show our custom menu
+                const customMenu = document.getElementById('drive-tagging-context-menu');
+                if (customMenu) {
+                    customMenu.style.display = 'block';
+                    customMenu.style.left = e.pageX + 'px';
+                    customMenu.style.top = e.pageY + 'px';
+                }
+            }
+        });
+    }
+
     // Inject custom styles
     injectStyles() {
         const style = document.createElement('style');
@@ -673,6 +746,41 @@ class DriveContentScript {
             .dialog-save {
                 background: #667eea;
                 color: white;
+            }
+            
+            /* Custom Context Menu Styles */
+            .drive-tagging-context-menu {
+                position: fixed;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                z-index: 10001;
+                display: none;
+                min-width: 150px;
+                padding: 8px 0;
+            }
+            
+            .drive-tagging-context-menu .menu-item {
+                display: flex;
+                align-items: center;
+                padding: 8px 16px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+            
+            .drive-tagging-context-menu .menu-item:hover {
+                background-color: #f5f5f5;
+            }
+            
+            .drive-tagging-context-menu .menu-icon {
+                margin-right: 8px;
+                font-size: 16px;
+            }
+            
+            .drive-tagging-context-menu .menu-text {
+                font-size: 14px;
+                color: #333;
             }
         `;
         

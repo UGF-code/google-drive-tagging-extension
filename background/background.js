@@ -13,21 +13,43 @@ const OAUTH_CONFIG = {
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Google Drive Tagging Extension installed');
   
+  // Test context menu API availability
+  if (chrome.contextMenus) {
+    console.log('Context menus API is available');
+  } else {
+    console.error('Context menus API is not available');
+    return;
+  }
+  
   // Remove any existing context menus first
   chrome.contextMenus.removeAll(() => {
     console.log('Removed existing context menus');
     
-    // Create context menu items
+    // Create context menu items - using 'link' context for file links
     chrome.contextMenus.create({
       id: 'tagFile',
       title: 'Tag File',
-      contexts: ['all'],
-      documentUrlPatterns: ['https://drive.google.com/*']
+      contexts: ['link'],
+      targetUrlPatterns: ['https://drive.google.com/file/d/*', 'https://drive.google.com/open?id=*']
     }, () => {
       if (chrome.runtime.lastError) {
         console.error('Error creating tagFile context menu:', chrome.runtime.lastError);
       } else {
         console.log('Tag File context menu created successfully');
+      }
+    });
+    
+    // Create page-level context menu as fallback
+    chrome.contextMenus.create({
+      id: 'tagFilePage',
+      title: 'Tag Current File',
+      contexts: ['page'],
+      documentUrlPatterns: ['https://drive.google.com/*']
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Error creating tagFilePage context menu:', chrome.runtime.lastError);
+      } else {
+        console.log('Tag Current File context menu created successfully');
       }
     });
     
@@ -48,14 +70,26 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
+  console.log('Context menu clicked:', info.menuItemId, 'on tab:', tab.url);
+  
   if (info.menuItemId === 'tagFile') {
+    console.log('Tag File context menu clicked (link)');
     // Single file tagging - send message to content script to detect clicked file
     chrome.tabs.sendMessage(tab.id, {
       action: 'openTagDialogForClickedFile',
       pageUrl: tab.url,
       linkUrl: info.linkUrl
     });
+  } else if (info.menuItemId === 'tagFilePage') {
+    console.log('Tag Current File context menu clicked (page)');
+    // Page-level file tagging
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'openTagDialogForClickedFile',
+      pageUrl: tab.url,
+      linkUrl: null
+    });
   } else if (info.menuItemId === 'batchTag') {
+    console.log('Batch Tag context menu clicked');
     // Batch file tagging
     chrome.tabs.sendMessage(tab.id, {
       action: 'openBatchTagDialog',
