@@ -210,18 +210,8 @@ class DriveTaggingPopup {
                     message: 'Hello from popup'
                 }, (response) => {
                     if (chrome.runtime.lastError) {
-                        console.log('Content script not available, injecting it...');
-                        // Inject content script if not available
-                        chrome.scripting.executeScript({
-                            target: { tabId: currentTab.id },
-                            files: ['content/content.js']
-                        }).then(() => {
-                            console.log('Content script injected successfully');
-                            resolve({ success: true, message: 'Content script injected' });
-                        }).catch(error => {
-                            console.error('Failed to inject content script:', error);
-                            resolve({ success: false, error: error.message });
-                        });
+                        console.log('Content script not responding to test message');
+                        resolve({ success: false, error: 'Content script not available' });
                     } else {
                         console.log('Popup received test response:', response);
                         resolve(response);
@@ -229,41 +219,14 @@ class DriveTaggingPopup {
                 });
             });
             
-            // Ask content script for current tags with retry
-            console.log('Popup sending getCurrentTags message to content script');
-            let contentResponse = { tags: [] };
-            let retryCount = 0;
-            const maxRetries = 3;
+            // Try to get tags directly from localStorage (same key as content script)
+            console.log('Popup trying to get tags directly from localStorage');
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            const storedTagsJson = localStorage.getItem(localStorageKey);
+            const tags = storedTagsJson ? JSON.parse(storedTagsJson) : [];
             
-            while (retryCount < maxRetries) {
-                contentResponse = await new Promise((resolve) => {
-                    chrome.tabs.sendMessage(currentTab.id, {
-                        action: 'getCurrentTags',
-                        fileId: this.currentFileId
-                    }, (response) => {
-                        if (chrome.runtime.lastError) {
-                            console.log(`Content script not responding to getCurrentTags (attempt ${retryCount + 1}/${maxRetries}), using empty array`);
-                            resolve({ tags: [] });
-                        } else {
-                            console.log('Popup received response from content script:', response);
-                            resolve(response || { tags: [] });
-                        }
-                    });
-                });
-                
-                if (contentResponse.tags && contentResponse.tags.length > 0) {
-                    console.log('Successfully got tags from content script:', contentResponse.tags);
-                    break;
-                }
-                
-                retryCount++;
-                if (retryCount < maxRetries) {
-                    console.log(`Retrying getCurrentTags in 500ms (attempt ${retryCount + 1}/${maxRetries})`);
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-            }
-            
-            const tags = contentResponse.tags || [];
+            console.log('Popup localStorage key:', localStorageKey);
+            console.log('Popup found tags in localStorage:', tags);
             console.log('Tags loaded from content script:', tags);
             
             // Always update currentTags and render, even if empty
@@ -324,18 +287,10 @@ class DriveTaggingPopup {
             const allTags = [...new Set([...existingTags, ...this.currentTags, tagText])];
             console.log('Merged tags:', allTags);
             
-            // Store merged tags via content script
-            const storeResponse = await new Promise((resolve) => {
-                chrome.tabs.sendMessage(currentTab.id, {
-                    action: 'storeTags',
-                    fileId: this.currentFileId,
-                    tags: allTags
-                }, (response) => {
-                    resolve(response || { success: false });
-                });
-            });
-            
-            console.log('Store response from content script:', storeResponse);
+            // Store merged tags directly in localStorage (same key as content script)
+            const localStorageKey = `drive_tags_${this.currentFileId}`;
+            localStorage.setItem(localStorageKey, JSON.stringify(allTags));
+            console.log('Popup stored tags in localStorage:', allTags);
             
             // Also try to update via background script (for future Drive API integration)
             const response = await this.sendMessage({
