@@ -231,6 +231,7 @@ class DriveTaggingPopup {
                         console.log('Web page context - localStorage key:', key);
                         console.log('Web page context - found tags:', tags);
                         console.log('Web page context - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
+                        console.log('Web page context - raw stored value:', stored);
                         return tags;
                     },
                     args: [this.currentFileId]
@@ -293,6 +294,9 @@ class DriveTaggingPopup {
             console.log('Merged tags:', allTags);
             
             // Store merged tags in web page context (same as content script)
+            const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+            const currentTab = tabs[0];
+            
             await new Promise((resolve) => {
                 chrome.scripting.executeScript({
                     target: { tabId: currentTab.id },
