@@ -122,13 +122,13 @@
 ## **🔍 Edge Case Testing**
 
 ### **Different File Types**
-- [ ] **Images (JPG, PNG, GIF, etc.)**
-  - [ ] Upload an image to Google Drive
-  - [ ] Right-click on the image
-  - [ ] Verify "Tag File" appears in context menu
-  - [ ] Click "Tag File" and add tags
-  - [ ] Verify tags are saved and displayed
-  - [ ] Test with different image formats (JPG, PNG, GIF, WebP)
+- [x] **Images (JPG, PNG, GIF, etc.)**
+  - [x] Upload an image to Google Drive
+  - [x] Right-click on the image
+  - [x] Verify "Tag File" appears in context menu
+  - [x] Click "Tag File" and add tags
+  - [x] Verify tags are saved and displayed
+  - [x] Test with different image formats (JPG, PNG, GIF, WebP)
 
 - [ ] **Videos (MP4, MOV, AVI, etc.)**
   - [ ] Upload a video to Google Drive
@@ -145,12 +145,18 @@
   - [ ] Click "Tag File" and add tags
   - [ ] Verify tags are saved and displayed
 
-- [ ] **PDF Documents**
-  - [ ] Upload a PDF to Google Drive
-  - [ ] Right-click on the PDF
-  - [ ] Verify "Tag File" appears in context menu
-  - [ ] Click "Tag File" and add tags
-  - [ ] Verify tags are saved and displayed
+- [x] **Google Docs Documents**
+  - [x] Right-click on a Google Docs file
+  - [x] Verify "Tag File" appears in context menu
+  - [x] Click "Tag File" and add tags
+  - [x] Verify tags are saved and displayed
+
+- [x] **PDF Documents**
+  - [x] Upload a PDF to Google Drive
+  - [x] Right-click on the PDF
+  - [x] Verify "Tag File" appears in context menu
+  - [x] Click "Tag File" and add tags
+  - [x] Verify tags are saved and displayed
 
 - [ ] **Compressed Files (ZIP, RAR, etc.)**
   - [ ] Upload a compressed file to Google Drive
