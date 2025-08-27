@@ -29,7 +29,7 @@ class DriveTaggingPopup {
         // Tag management elements
         this.tagInput = document.getElementById('tagInput');
         this.addTagBtn = document.getElementById('addTagBtn');
-        this.currentTags = document.getElementById('currentTags');
+        this.currentTagsContainer = document.getElementById('currentTags');
         this.tagSuggestions = document.getElementById('tagSuggestions');
 
         // Batch operations elements
@@ -268,11 +268,11 @@ class DriveTaggingPopup {
     // Render current tags
     renderCurrentTags() {
         if (this.currentTags.length === 0) {
-            this.currentTags.innerHTML = '<div class="no-tags">No tags yet. Add your first tag above!</div>';
+            this.currentTagsContainer.innerHTML = '<div class="no-tags">No tags yet. Add your first tag above!</div>';
             return;
         }
 
-        this.currentTags.innerHTML = this.currentTags.map(tag => `
+        this.currentTagsContainer.innerHTML = this.currentTags.map(tag => `
             <div class="tag" data-tag="${this.escapeHtml(tag)}">
                 <span>${this.escapeHtml(tag)}</span>
                 <button class="tag-remove" title="Remove tag">×</button>
@@ -280,7 +280,7 @@ class DriveTaggingPopup {
         `).join('');
         
         // Add event listeners to remove buttons
-        this.currentTags.querySelectorAll('.tag-remove').forEach(button => {
+        this.currentTagsContainer.querySelectorAll('.tag-remove').forEach(button => {
             button.addEventListener('click', (e) => {
                 const tagElement = e.target.closest('.tag');
                 const tagToRemove = tagElement.getAttribute('data-tag');
@@ -302,10 +302,18 @@ class DriveTaggingPopup {
         }
 
         this.tagSuggestions.innerHTML = suggestions.map(tag => `
-            <div class="suggestion-tag" onclick="popup.addSuggestionTag('${this.escapeHtml(tag)}')">
+            <div class="suggestion-tag" data-suggestion="${this.escapeHtml(tag)}">
                 ${this.escapeHtml(tag)}
             </div>
         `).join('');
+        
+        // Add event listeners to suggestion tags
+        this.tagSuggestions.querySelectorAll('.suggestion-tag').forEach(suggestion => {
+            suggestion.addEventListener('click', (e) => {
+                const tagToAdd = e.target.getAttribute('data-suggestion');
+                this.addSuggestionTag(tagToAdd);
+            });
+        });
     }
 
     // Add a suggestion tag
