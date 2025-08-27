@@ -570,10 +570,21 @@ class DriveContentScript {
         try {
             console.log('Attempting to add tag:', tag, 'to file:', fileId);
             
-            // Load current tags from localStorage
-            const storageKey = `drive_tags_${fileId}`;
-            const localTags = localStorage.getItem(storageKey);
-            const currentTags = localTags ? JSON.parse(localTags) : [];
+                                // Load current tags from localStorage
+                    const storageKey = `drive_tags_${fileId}`;
+                    const localTags = localStorage.getItem(storageKey);
+                    const currentTags = localTags ? JSON.parse(localTags) : [];
+                    
+                    // Debug: Log everything about localStorage
+                    console.log('=== CONTENT SCRIPT DEBUG ===');
+                    console.log('File ID:', fileId);
+                    console.log('Storage key:', storageKey);
+                    console.log('Raw stored value:', localTags);
+                    console.log('Parsed tags:', currentTags);
+                    console.log('All drive_tags_ keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
+                    console.log('Current URL:', window.location.href);
+                    console.log('localStorage total items:', localStorage.length);
+                    console.log('=== END CONTENT SCRIPT DEBUG ===');
             
             // Add new tag and remove duplicates
             const newTags = [...new Set([...currentTags, tag])];

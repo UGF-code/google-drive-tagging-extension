@@ -228,12 +228,19 @@ class DriveTaggingPopup {
                         const key = `drive_tags_${fileId}`;
                         const stored = localStorage.getItem(key);
                         const tags = stored ? JSON.parse(stored) : [];
-                        console.log('Web page context - localStorage key:', key);
-                        console.log('Web page context - found tags:', tags);
-                        console.log('Web page context - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
-                        console.log('Web page context - raw stored value:', stored);
-                        console.log('Web page context - current URL:', window.location.href);
-                        return { tags, key, stored, allKeys: Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')) };
+                        
+                        // Debug: Log everything about localStorage
+                        console.log('=== POPUP WEB PAGE CONTEXT DEBUG ===');
+                        console.log('File ID:', fileId);
+                        console.log('Storage key:', key);
+                        console.log('Raw stored value:', stored);
+                        console.log('Parsed tags:', tags);
+                        console.log('All drive_tags_ keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
+                        console.log('Current URL:', window.location.href);
+                        console.log('localStorage total items:', localStorage.length);
+                        console.log('=== END POPUP DEBUG ===');
+                        
+                        return { tags, key, stored, allKeys: Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')), url: window.location.href };
                     },
                     args: [this.currentFileId]
                 }).then((results) => {
