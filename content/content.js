@@ -545,17 +545,24 @@ class DriveContentScript {
 
     // Render tags in dialog
     renderTagsInDialog(container, tags) {
+        console.log('Rendering tags in dialog:', tags, 'Container:', container);
+        
         if (tags.length === 0) {
+            console.log('No tags to render, showing "No tags yet"');
             container.innerHTML = '<div class="no-tags">No tags yet</div>';
             return;
         }
         
-        container.innerHTML = tags.map(tag => `
+        const html = tags.map(tag => `
             <div class="tag">
                 <span>${this.escapeHtml(tag)}</span>
                 <button class="tag-remove" data-tag="${this.escapeHtml(tag)}">×</button>
             </div>
         `).join('');
+        
+        console.log('Setting container HTML:', html);
+        container.innerHTML = html;
+        console.log('Tags rendered successfully');
     }
 
     // Open custom popup overlay
