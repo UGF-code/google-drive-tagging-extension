@@ -419,7 +419,9 @@ class DriveContentScript {
             });
             
             // Load current tags
+            console.log('Loading tags for dialog, fileId:', fileId);
             this.loadFileTags(fileId).then(tags => {
+                console.log('Tags loaded for dialog:', tags);
                 this.renderTagsInDialog(currentTags, tags);
             });
             
@@ -554,7 +556,10 @@ class DriveContentScript {
             const dialog = document.querySelector('.drive-tagging-dialog');
             const currentTagsElement = dialog?.querySelector('.current-tags');
             if (currentTagsElement) {
+                console.log('Updating dialog with tags:', newTags);
                 this.renderTagsInDialog(currentTagsElement, newTags);
+            } else {
+                console.log('Dialog not found or current-tags element not found');
             }
             
             return true;

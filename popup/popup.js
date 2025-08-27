@@ -252,8 +252,14 @@ class DriveTaggingPopup {
             const existingTagsJson = localStorage.getItem(localStorageKey);
             const existingTags = existingTagsJson ? JSON.parse(existingTagsJson) : [];
             
+            console.log('Popup merging tags:');
+            console.log('Existing tags from localStorage:', existingTags);
+            console.log('Current tags in popup:', this.currentTags);
+            console.log('New tag to add:', tagText);
+            
             // Merge with existing tags and remove duplicates
             const allTags = [...new Set([...existingTags, ...this.currentTags, tagText])];
+            console.log('Merged tags:', allTags);
             
             // Store merged tags in localStorage
             localStorage.setItem(localStorageKey, JSON.stringify(allTags));
