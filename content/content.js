@@ -74,12 +74,8 @@ class DriveContentScript {
         if (fileId !== this.currentFileId) {
             this.currentFileId = fileId;
             
-            // Notify popup about file change
-            chrome.runtime.sendMessage({
-                action: 'fileSelected',
-                fileId: fileId,
-                fileName: this.getCurrentFileName()
-            });
+            // Log file change locally instead of sending message
+            console.log('File changed to:', fileId, 'Name:', this.getCurrentFileName());
         }
     }
 
@@ -162,16 +158,9 @@ class DriveContentScript {
             };
         }).filter(file => file.id && file.name);
         
-                // Notify popup about selection change
+                // Log selection change locally instead of sending message
         if (this.selectedFiles.length > 0) {
-          try {
-            chrome.runtime.sendMessage({
-              action: 'batchFilesSelected',
-              files: this.selectedFiles
-            });
-          } catch (error) {
-            console.log('Could not send message to popup (popup may be closed):', error);
-          }
+          console.log('Files selected:', this.selectedFiles.length, 'files');
         }
     }
 
@@ -412,6 +401,12 @@ class DriveContentScript {
             const addBtn = dialog.querySelector('.add-tag-btn');
             const currentTags = dialog.querySelector('.current-tags');
             
+            console.log('Dialog elements found:', {
+                tagInput: !!tagInput,
+                addBtn: !!addBtn,
+                currentTags: !!currentTags
+            });
+            
             // Load current tags
             this.loadFileTags(fileId).then(tags => {
                 this.renderTagsInDialog(currentTags, tags);
@@ -420,35 +415,84 @@ class DriveContentScript {
             // Add tag
             const addTag = async () => {
                 const tagText = tagInput.value.trim();
+                console.log('Add button clicked with tag:', tagText, 'for file:', fileId);
+                
                 if (tagText) {
                     console.log('Adding tag:', tagText, 'to file:', fileId);
                     try {
-                        await this.addTagToFile(fileId, tagText);
-                        tagInput.value = '';
-                        console.log('Tag added successfully');
+                        const success = await this.addTagToFile(fileId, tagText);
+                        console.log('addTagToFile returned:', success);
+                        
+                        if (success) {
+                            tagInput.value = '';
+                            console.log('Tag added successfully');
+                            
+                            // Show success message
+                            const successMsg = document.createElement('div');
+                            successMsg.textContent = `Tag "${tagText}" added successfully!`;
+                            successMsg.style.cssText = `
+                                position: fixed;
+                                top: 20px;
+                                right: 20px;
+                                background: #4CAF50;
+                                color: white;
+                                padding: 10px 20px;
+                                border-radius: 4px;
+                                z-index: 10002;
+                                font-size: 14px;
+                            `;
+                            document.body.appendChild(successMsg);
+                            
+                            // Remove success message after 3 seconds
+                            setTimeout(() => {
+                                successMsg.remove();
+                            }, 3000);
+                        } else {
+                            console.error('addTagToFile returned false');
+                            alert('Failed to add tag. Please try again.');
+                        }
                     } catch (error) {
                         console.error('Failed to add tag:', error);
                         alert('Failed to add tag. Please try again.');
                     }
+                } else {
+                    console.log('No tag text provided');
                 }
             };
             
-            addBtn?.addEventListener('click', addTag);
-            tagInput?.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') addTag();
-            });
+            if (addBtn) {
+                console.log('Adding click listener to Add button');
+                addBtn.addEventListener('click', addTag);
+            } else {
+                console.error('Add button not found!');
+            }
+            
+            if (tagInput) {
+                console.log('Adding keypress listener to tag input');
+                tagInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') addTag();
+                });
+            } else {
+                console.error('Tag input not found!');
+            }
         }
     }
 
     // Load file tags
     async loadFileTags(fileId) {
         try {
-            const response = await chrome.runtime.sendMessage({
-                action: 'getFileTags',
-                fileId: fileId
-            });
+            // Load from localStorage only
+            const storageKey = `drive_tags_${fileId}`;
+            const localTags = localStorage.getItem(storageKey);
             
-            return response.success ? response.tags : [];
+            if (localTags) {
+                const tags = JSON.parse(localTags);
+                console.log('Loaded tags from localStorage:', tags);
+                return tags;
+            }
+            
+            console.log('No tags found for file:', fileId);
+            return [];
         } catch (error) {
             console.error('Failed to load file tags:', error);
             return [];
@@ -458,25 +502,32 @@ class DriveContentScript {
     // Add tag to file
     async addTagToFile(fileId, tag) {
         try {
-            const currentTags = await this.loadFileTags(fileId);
+            console.log('Attempting to add tag:', tag, 'to file:', fileId);
+            
+            // Load current tags from localStorage
+            const storageKey = `drive_tags_${fileId}`;
+            const localTags = localStorage.getItem(storageKey);
+            const currentTags = localTags ? JSON.parse(localTags) : [];
+            
+            // Add new tag
             const newTags = [...currentTags, tag];
             
-            const response = await chrome.runtime.sendMessage({
-                action: 'updateFileTags',
-                fileId: fileId,
-                tags: newTags
-            });
+            // Store in localStorage
+            localStorage.setItem(storageKey, JSON.stringify(newTags));
             
-            if (response.success) {
-                // Update the dialog
-                const dialog = document.querySelector('.drive-tagging-dialog');
-                const currentTagsElement = dialog?.querySelector('.current-tags');
-                if (currentTagsElement) {
-                    this.renderTagsInDialog(currentTagsElement, newTags);
-                }
+            console.log('Tags stored locally:', newTags);
+            
+            // Update the dialog immediately
+            const dialog = document.querySelector('.drive-tagging-dialog');
+            const currentTagsElement = dialog?.querySelector('.current-tags');
+            if (currentTagsElement) {
+                this.renderTagsInDialog(currentTagsElement, newTags);
             }
+            
+            return true;
         } catch (error) {
             console.error('Failed to add tag:', error);
+            return false;
         }
     }
 
