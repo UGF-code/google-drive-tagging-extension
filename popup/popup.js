@@ -232,13 +232,14 @@ class DriveTaggingPopup {
                         console.log('Web page context - found tags:', tags);
                         console.log('Web page context - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
                         console.log('Web page context - raw stored value:', stored);
-                        return tags;
+                        console.log('Web page context - current URL:', window.location.href);
+                        return { tags, key, stored, allKeys: Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')) };
                     },
                     args: [this.currentFileId]
                 }).then((results) => {
-                    const tags = results[0].result || [];
-                    console.log('Popup received tags from web page context:', tags);
-                    resolve(tags);
+                    const data = results[0].result || { tags: [] };
+                    console.log('Popup received data from web page context:', data);
+                    resolve(data.tags);
                 }).catch((error) => {
                     console.error('Failed to get tags from web page context:', error);
                     resolve([]);
