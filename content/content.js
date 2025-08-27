@@ -261,9 +261,13 @@ class DriveContentScript {
                 break;
                 
             case 'getCurrentTags':
+                console.log('Content script received getCurrentTags request for fileId:', request.fileId);
                 this.loadFileTags(request.fileId).then(tags => {
                     console.log('Content script responding with tags:', tags);
                     sendResponse({ tags: tags });
+                }).catch(error => {
+                    console.error('Error loading tags for getCurrentTags:', error);
+                    sendResponse({ tags: [] });
                 });
                 return true; // Keep message channel open for async response
                 break;

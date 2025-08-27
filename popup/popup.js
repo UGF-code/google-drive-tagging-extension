@@ -203,11 +203,13 @@ class DriveTaggingPopup {
             console.log('Popup loading tags for file:', this.currentFileId);
             
             // Ask content script for current tags
+            console.log('Popup sending getCurrentTags message to content script');
             const contentResponse = await new Promise((resolve) => {
                 chrome.tabs.sendMessage(currentTab.id, {
                     action: 'getCurrentTags',
                     fileId: this.currentFileId
                 }, (response) => {
+                    console.log('Popup received response from content script:', response);
                     resolve(response || { tags: [] });
                 });
             });
@@ -215,28 +217,18 @@ class DriveTaggingPopup {
             const tags = contentResponse.tags || [];
             console.log('Tags loaded from content script:', tags);
             
-            if (tags.length > 0) {
-                this.currentTags = tags;
-                this.renderCurrentTags();
-                console.log('Tags loaded from content script:', this.currentTags);
-                return;
-            } else {
+            // Always update currentTags and render, even if empty
+            this.currentTags = tags;
+            this.renderCurrentTags();
+            console.log('Tags loaded from content script:', this.currentTags);
+            
+            if (tags.length === 0) {
                 console.log('No tags found in content script for this file');
             }
 
-            // Fallback to background script (for future Drive API integration)
-            const response = await this.sendMessage({
-                action: 'getFileTags',
-                fileId: this.currentFileId
-            });
-
-            if (response.success) {
-                this.currentTags = response.tags;
-                this.renderCurrentTags();
-            } else {
-                this.currentTags = [];
-                this.renderCurrentTags();
-            }
+            // No fallback needed - we're using direct content script communication
+            this.currentTags = [];
+            this.renderCurrentTags();
         } catch (error) {
             console.error('Failed to load current tags:', error);
             this.currentTags = [];
