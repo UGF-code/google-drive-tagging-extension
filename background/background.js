@@ -120,30 +120,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Route to appropriate handler
   switch (request.action) {
     case MESSAGE_TYPES.CHECK_AUTH:
+    case 'getAuthToken': // Backward compatibility
       handleCheckAuth(sendResponse);
       break;
       
     case MESSAGE_TYPES.AUTHENTICATE:
+    case 'authenticate': // Backward compatibility
       handleAuthentication(sendResponse);
       break;
       
     case MESSAGE_TYPES.REVOKE_AUTH:
+    case 'revokeAuth': // Backward compatibility
       handleRevokeAuth(sendResponse);
       break;
       
     case MESSAGE_TYPES.GET_TAGS:
+    case 'getFileTags': // Backward compatibility
       handleGetTags(request.fileId, sendResponse);
       break;
       
     case MESSAGE_TYPES.ADD_TAG:
+    case 'addTagToFile': // Backward compatibility
       handleAddTag(request.fileId, request.tag, sendResponse);
       break;
       
     case MESSAGE_TYPES.REMOVE_TAG:
+    case 'removeTagFromFile': // Backward compatibility
       handleRemoveTag(request.fileId, request.tag, sendResponse);
       break;
       
     case MESSAGE_TYPES.UPDATE_TAGS:
+    case 'updateFileTags': // Backward compatibility
       handleUpdateTags(request.fileId, request.tags, sendResponse);
       break;
       
