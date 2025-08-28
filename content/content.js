@@ -463,11 +463,12 @@ class DriveContentScript {
                 this.renderTagsInDialog(currentTags, tags);
             }).catch(error => {
                 console.error('Failed to load tags for dialog:', error);
+                console.log('Error message:', error.message);
                 if (error.message.includes('Extension context invalidated')) {
                     // Show user-friendly message
-                    currentTags.innerHTML = '<div class="error-message">Extension was reloaded. Please refresh this page to continue.</div>';
+                    currentTags.innerHTML = '<div class="error-message" style="color: #d32f2f; padding: 10px; text-align: center;">Extension was reloaded. Please refresh this page to continue.</div>';
                 } else {
-                    currentTags.innerHTML = '<div class="error-message">Failed to load tags. Please try again.</div>';
+                    currentTags.innerHTML = '<div class="error-message" style="color: #d32f2f; padding: 10px; text-align: center;">Failed to load tags. Please try again.</div>';
                 }
             });
             
@@ -601,11 +602,11 @@ class DriveContentScript {
                 return tags;
             } else {
                 console.error('Failed to load tags:', response.error);
-                return [];
+                throw new Error(response.error || 'Failed to load tags');
             }
         } catch (error) {
             console.error('Failed to load file tags:', error);
-            return [];
+            throw error; // Re-throw the error so it can be handled by the caller
         }
     }
 
