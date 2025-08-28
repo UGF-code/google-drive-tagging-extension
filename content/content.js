@@ -606,6 +606,8 @@ class DriveContentScript {
                 tag: tag
             });
             
+            console.log('🔍 Content script received response:', response);
+            
             if (response.success) {
                 console.log('Tag added successfully via background script');
                 

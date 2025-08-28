@@ -210,14 +210,19 @@ async function handleGetTags(fileId, sendResponse) {
 
 async function handleAddTag(fileId, tag, sendResponse) {
   try {
+    console.log('🔍 handleAddTag called with:', { fileId, tag });
+    
     if (!fileId || !tag) {
       throw new Error('File ID and tag are required');
     }
     
     const currentTags = await getFileTags(fileId);
+    console.log('🔍 Current tags:', currentTags);
+    console.log('🔍 Checking if tag exists:', currentTags.includes(tag));
     
     // Check if tag already exists
     if (currentTags.includes(tag)) {
+      console.log('🔍 Tag already exists, sending duplicate response');
       sendResponse({ 
         success: false, 
         error: 'Tag already exists',
@@ -227,9 +232,11 @@ async function handleAddTag(fileId, tag, sendResponse) {
       return;
     }
     
+    console.log('🔍 Tag does not exist, adding it');
     const newTags = [...currentTags, tag];
     await updateFileTags(fileId, newTags);
     
+    console.log('🔍 Tag added successfully, new tags:', newTags);
     sendResponse({ success: true, data: newTags });
   } catch (error) {
     console.error('Failed to add tag:', error);

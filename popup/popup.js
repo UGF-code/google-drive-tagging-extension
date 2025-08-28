@@ -248,12 +248,6 @@ class DriveTaggingPopup {
         const tagText = this.tagInput.value.trim();
         if (!tagText || !this.currentFileId) return;
 
-        // Check for duplicate tags
-        if (this.currentTags.includes(tagText)) {
-            this.showError('This tag already exists');
-            return;
-        }
-
         try {
             this.showLoading();
             
@@ -272,7 +266,13 @@ class DriveTaggingPopup {
                 console.log('Tag added successfully:', tagText);
             } else {
                 console.error('Failed to add tag:', response.error);
-                this.showError(response.error || 'Failed to add tag');
+                
+                // Handle duplicate tag case
+                if (response.isDuplicate) {
+                    this.showError('This tag already exists');
+                } else {
+                    this.showError(response.error || 'Failed to add tag');
+                }
             }
         } catch (error) {
             console.error('Failed to add tag:', error);
