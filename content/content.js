@@ -471,10 +471,10 @@ class DriveContentScript {
                 if (tagText) {
                     console.log('Adding tag:', tagText, 'to file:', fileId);
                     try {
-                        const success = await this.addTagToFile(fileId, tagText);
-                        console.log('addTagToFile returned:', success);
+                        const result = await this.addTagToFile(fileId, tagText);
+                        console.log('addTagToFile returned:', result);
                         
-                        if (success) {
+                        if (result.success) {
                             tagInput.value = '';
                             console.log('Tag added successfully');
                             
@@ -497,6 +497,30 @@ class DriveContentScript {
                             // Remove success message after 3 seconds
                             setTimeout(() => {
                                 successMsg.remove();
+                            }, 3000);
+                        } else if (result.isDuplicate) {
+                            console.log('Tag already exists');
+                            tagInput.value = '';
+                            
+                            // Show duplicate message
+                            const duplicateMsg = document.createElement('div');
+                            duplicateMsg.textContent = `Tag "${tagText}" already exists!`;
+                            duplicateMsg.style.cssText = `
+                                position: fixed;
+                                top: 20px;
+                                right: 20px;
+                                background: #FF9800;
+                                color: white;
+                                padding: 10px 20px;
+                                border-radius: 4px;
+                                z-index: 10002;
+                                font-size: 14px;
+                            `;
+                            document.body.appendChild(duplicateMsg);
+                            
+                            // Remove duplicate message after 3 seconds
+                            setTimeout(() => {
+                                duplicateMsg.remove();
                             }, 3000);
                         } else {
                             console.error('addTagToFile returned false');
@@ -595,14 +619,26 @@ class DriveContentScript {
                     console.log('Dialog not found or current-tags element not found');
                 }
                 
-                return true;
+                return { success: true, isDuplicate: false };
             } else {
                 console.error('Failed to add tag via background script:', response.error);
-                return false;
+                
+                // Handle duplicate tag case
+                if (response.isDuplicate) {
+                    console.log('Tag already exists, updating dialog with current tags');
+                    const dialog = document.querySelector('.drive-tagging-dialog');
+                    const currentTagsElement = dialog?.querySelector('.current-tags');
+                    if (currentTagsElement && response.data) {
+                        this.renderTagsInDialog(currentTagsElement, response.data);
+                    }
+                    return { success: false, isDuplicate: true, data: response.data };
+                }
+                
+                return { success: false, isDuplicate: false };
             }
         } catch (error) {
             console.error('Failed to add tag:', error);
-            return false;
+            return { success: false, isDuplicate: false };
         }
     }
 

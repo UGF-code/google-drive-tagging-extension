@@ -215,7 +215,19 @@ async function handleAddTag(fileId, tag, sendResponse) {
     }
     
     const currentTags = await getFileTags(fileId);
-    const newTags = [...new Set([...currentTags, tag])]; // Remove duplicates
+    
+    // Check if tag already exists
+    if (currentTags.includes(tag)) {
+      sendResponse({ 
+        success: false, 
+        error: 'Tag already exists',
+        data: currentTags,
+        isDuplicate: true
+      });
+      return;
+    }
+    
+    const newTags = [...currentTags, tag];
     await updateFileTags(fileId, newTags);
     
     sendResponse({ success: true, data: newTags });
