@@ -287,11 +287,14 @@ class DriveContentScript {
                 return true; // Keep message channel open for async response
                 break;
                 
-            case 'storeTags':
-                const storageKey = `drive_tags_${request.fileId}`;
-                localStorage.setItem(storageKey, JSON.stringify(request.tags));
-                console.log('Content script stored tags:', request.tags);
-                sendResponse({ success: true });
+            case 'removeTag':
+                this.removeTagFromFile(request.fileId, request.tag).then(success => {
+                    sendResponse({ success: success });
+                }).catch(error => {
+                    console.error('Error removing tag:', error);
+                    sendResponse({ success: false, error: error.message });
+                });
+                return true; // Keep message channel open for async response
                 break;
                 
             default:
@@ -363,6 +366,7 @@ class DriveContentScript {
     createTagDialog(fileId) {
         const dialog = document.createElement('div');
         dialog.className = 'drive-tagging-dialog';
+        dialog.setAttribute('data-file-id', fileId);
         dialog.innerHTML = `
             <div class="dialog-overlay">
                 <div class="dialog-content">
@@ -544,73 +548,95 @@ class DriveContentScript {
         }
     }
 
-    // Load file tags
+    // Load file tags via message passing to background script
     async loadFileTags(fileId) {
         try {
-            // Load from localStorage only
-            const storageKey = `drive_tags_${fileId}`;
-            const localTags = localStorage.getItem(storageKey);
+            console.log('Loading tags for file:', fileId);
+            const response = await this.sendMessage({
+                action: 'getTags',
+                fileId: fileId
+            });
             
-            if (localTags) {
-                const tags = JSON.parse(localTags);
-                console.log('Loaded tags from localStorage:', tags);
+            if (response.success) {
+                const tags = response.data || [];
+                console.log('Loaded tags from background script:', tags);
                 return tags;
+            } else {
+                console.error('Failed to load tags:', response.error);
+                return [];
             }
-            
-            console.log('No tags found for file:', fileId);
-            return [];
         } catch (error) {
             console.error('Failed to load file tags:', error);
             return [];
         }
     }
 
-    // Add tag to file
+    // Add tag to file via message passing to background script
     async addTagToFile(fileId, tag) {
         try {
             console.log('Attempting to add tag:', tag, 'to file:', fileId);
             
-                                // Load current tags from localStorage
-                    const storageKey = `drive_tags_${fileId}`;
-                    const localTags = localStorage.getItem(storageKey);
-                    const currentTags = localTags ? JSON.parse(localTags) : [];
-                    
-                    // Debug: Log everything about localStorage
-                    console.log('=== CONTENT SCRIPT DEBUG ===');
-                    console.log('File ID:', fileId);
-                    console.log('Storage key:', storageKey);
-                    console.log('Raw stored value:', localTags);
-                    console.log('Parsed tags:', currentTags);
-                    console.log('All drive_tags_ keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
-                    console.log('Current URL:', window.location.href);
-                    console.log('localStorage total items:', localStorage.length);
-                    console.log('=== END CONTENT SCRIPT DEBUG ===');
+            const response = await this.sendMessage({
+                action: 'addTag',
+                fileId: fileId,
+                tag: tag
+            });
             
-            // Add new tag and remove duplicates
-            const newTags = [...new Set([...currentTags, tag])];
-            
-            // Store in localStorage
-            localStorage.setItem(storageKey, JSON.stringify(newTags));
-            
-            console.log('Content script storing tags in localStorage:');
-            console.log('Storage key:', storageKey);
-            console.log('Tags to store:', newTags);
-            console.log('Tags stored locally:', newTags);
-            console.log('Content script - all localStorage keys:', Object.keys(localStorage).filter(k => k.startsWith('drive_tags_')));
-            
-            // Update the dialog immediately
-            const dialog = document.querySelector('.drive-tagging-dialog');
-            const currentTagsElement = dialog?.querySelector('.current-tags');
-            if (currentTagsElement) {
-                console.log('Updating dialog with tags:', newTags);
-                this.renderTagsInDialog(currentTagsElement, newTags);
+            if (response.success) {
+                console.log('Tag added successfully via background script');
+                
+                // Update the dialog immediately with new tags
+                const dialog = document.querySelector('.drive-tagging-dialog');
+                const currentTagsElement = dialog?.querySelector('.current-tags');
+                if (currentTagsElement) {
+                    console.log('Updating dialog with tags:', response.data);
+                    this.renderTagsInDialog(currentTagsElement, response.data);
+                } else {
+                    console.log('Dialog not found or current-tags element not found');
+                }
+                
+                return true;
             } else {
-                console.log('Dialog not found or current-tags element not found');
+                console.error('Failed to add tag via background script:', response.error);
+                return false;
             }
-            
-            return true;
         } catch (error) {
             console.error('Failed to add tag:', error);
+            return false;
+        }
+    }
+
+    // Remove tag from file via message passing to background script
+    async removeTagFromFile(fileId, tag) {
+        try {
+            console.log('Attempting to remove tag:', tag, 'from file:', fileId);
+            
+            const response = await this.sendMessage({
+                action: 'removeTag',
+                fileId: fileId,
+                tag: tag
+            });
+            
+            if (response.success) {
+                console.log('Tag removed successfully via background script');
+                
+                // Update the dialog immediately with new tags
+                const dialog = document.querySelector('.drive-tagging-dialog');
+                const currentTagsElement = dialog?.querySelector('.current-tags');
+                if (currentTagsElement) {
+                    console.log('Updating dialog with tags:', response.data);
+                    this.renderTagsInDialog(currentTagsElement, response.data);
+                } else {
+                    console.log('Dialog not found or current-tags element not found');
+                }
+                
+                return true;
+            } else {
+                console.error('Failed to remove tag via background script:', response.error);
+                return false;
+            }
+        } catch (error) {
+            console.error('Failed to remove tag:', error);
             return false;
         }
     }
@@ -635,6 +661,36 @@ class DriveContentScript {
         console.log('Setting container HTML:', html);
         container.innerHTML = html;
         console.log('Tags rendered successfully');
+        
+        // Add event listeners for remove buttons
+        const removeButtons = container.querySelectorAll('.tag-remove');
+        removeButtons.forEach(button => {
+            button.addEventListener('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const tag = button.getAttribute('data-tag');
+                const dialog = container.closest('.drive-tagging-dialog');
+                const fileId = dialog?.getAttribute('data-file-id') || this.currentFileId;
+                
+                console.log('Remove tag button clicked:', tag, 'for file:', fileId);
+                
+                if (tag && fileId) {
+                    try {
+                        const success = await this.removeTagFromFile(fileId, tag);
+                        if (success) {
+                            console.log('Tag removed successfully');
+                        } else {
+                            console.error('Failed to remove tag');
+                            alert('Failed to remove tag. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error removing tag:', error);
+                        alert('Failed to remove tag. Please try again.');
+                    }
+                }
+            });
+        });
     }
 
     // Open custom popup overlay
@@ -956,6 +1012,25 @@ class DriveContentScript {
         `;
         
         document.head.appendChild(style);
+    }
+
+    // Send message to background script
+    async sendMessage(message) {
+        try {
+            return new Promise((resolve, reject) => {
+                chrome.runtime.sendMessage(message, (response) => {
+                    if (chrome.runtime.lastError) {
+                        console.error('Message error:', chrome.runtime.lastError);
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        resolve(response);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Failed to send message:', error);
+            throw error;
+        }
     }
 
     // Utility function to escape HTML
