@@ -164,7 +164,7 @@ class DriveTaggingPopup {
 
             const fileId = this.extractFileId(currentTab.url);
             if (!fileId) {
-                this.showError('Not on Google Drive');
+                this.showError('No file selected. Please open a Google Drive file (Docs, Sheets, Slides, or Drive file).');
                 return;
             }
 
@@ -231,13 +231,25 @@ class DriveTaggingPopup {
                 console.error('Failed to load tags:', response.error);
                 this.currentTags = [];
                 this.renderCurrentTags();
-                this.showError('Failed to load tags');
+                
+                // Better error messages
+                if (response.error?.includes('Failed to fetch') || response.error?.includes('NetworkError')) {
+                    this.showError('No internet connection. Please check your network and try again.');
+                } else {
+                    this.showError('Failed to load tags. Please try again.');
+                }
             }
         } catch (error) {
             console.error('Failed to load current tags:', error);
             this.currentTags = [];
             this.renderCurrentTags();
-            this.showError('Failed to load tags');
+            
+            // Better error messages
+            if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+                this.showError('No internet connection. Please check your network and try again.');
+            } else {
+                this.showError('Failed to load tags. Please try again.');
+            }
         } finally {
             this.hideLoading();
         }

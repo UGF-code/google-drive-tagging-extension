@@ -461,6 +461,14 @@ class DriveContentScript {
             this.loadFileTags(fileId).then(tags => {
                 console.log('Tags loaded for dialog:', tags);
                 this.renderTagsInDialog(currentTags, tags);
+            }).catch(error => {
+                console.error('Failed to load tags for dialog:', error);
+                if (error.message.includes('Extension context invalidated')) {
+                    // Show user-friendly message
+                    currentTags.innerHTML = '<div class="error-message">Extension was reloaded. Please refresh this page to continue.</div>';
+                } else {
+                    currentTags.innerHTML = '<div class="error-message">Failed to load tags. Please try again.</div>';
+                }
             });
             
             // Add tag
@@ -473,10 +481,6 @@ class DriveContentScript {
                     try {
                         const result = await this.addTagToFile(fileId, tagText);
                         console.log('addTagToFile returned:', result);
-                        
-                        // Clear any existing messages first
-                        const existingMessages = document.querySelectorAll('[style*="position: fixed"][style*="top: 20px"][style*="right: 20px"]');
-                        existingMessages.forEach(msg => msg.remove());
                         
                         if (result.success) {
                             tagInput.value = '';
@@ -528,7 +532,13 @@ class DriveContentScript {
                             }, 3000);
                         } else {
                             console.error('addTagToFile returned false');
-                            alert('Failed to add tag. Please try again.');
+                            
+                            // Better error messages
+                            if (result.error?.includes('Failed to fetch') || result.error?.includes('NetworkError')) {
+                                alert('No internet connection. Please check your network and try again.');
+                            } else {
+                                alert('Failed to add tag. Please try again.');
+                            }
                         }
                     } catch (error) {
                         console.error('Failed to add tag:', error);
@@ -541,10 +551,26 @@ class DriveContentScript {
             
             if (addBtn) {
                 console.log('Adding click listener to Add button');
+                console.log('Add button element:', addBtn);
+                console.log('Add button HTML:', addBtn.outerHTML);
                 
-                // Remove any existing listeners to prevent duplicates
-                addBtn.removeEventListener('click', addTag);
+                // Test if button is clickable with multiple event types
                 addBtn.addEventListener('click', addTag);
+                addBtn.addEventListener('click', () => {
+                    console.log('🎯 ADD BUTTON CLICKED - TEST EVENT');
+                });
+                addBtn.addEventListener('mousedown', () => {
+                    console.log('🎯 ADD BUTTON MOUSEDOWN - TEST EVENT');
+                });
+                addBtn.addEventListener('mouseup', () => {
+                    console.log('🎯 ADD BUTTON MOUSEUP - TEST EVENT');
+                });
+                
+                // Test if button is disabled or has pointer events
+                console.log('Add button disabled:', addBtn.disabled);
+                console.log('Add button pointer-events:', window.getComputedStyle(addBtn).pointerEvents);
+                console.log('Add button display:', window.getComputedStyle(addBtn).display);
+                console.log('Add button visibility:', window.getComputedStyle(addBtn).visibility);
             } else {
                 console.error('Add button not found!');
             }
@@ -1044,6 +1070,12 @@ class DriveContentScript {
     async sendMessage(message) {
         try {
             return new Promise((resolve, reject) => {
+                // Check if extension context is still valid
+                if (!chrome.runtime?.id) {
+                    reject(new Error('Extension context invalidated. Please refresh the page.'));
+                    return;
+                }
+                
                 chrome.runtime.sendMessage(message, (response) => {
                     if (chrome.runtime.lastError) {
                         console.error('Message error:', chrome.runtime.lastError);
