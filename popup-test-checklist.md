@@ -1,7 +1,7 @@
 # 🧪 Popup Functionality Test Checklist
 
 ## **Test Environment**
-- [ ] Extension reloaded with new background script
+- [x] Extension reloaded with new background script
 - [ ] Browser console open for monitoring
 - [ ] Google Drive accessible
 
@@ -25,58 +25,58 @@
 ## **📁 File Detection Tests**
 
 ### **Test 3: Google Drive File**
-- [ ] Go to Google Drive
-- [ ] Open a document/spreadsheet
-- [ ] Click extension icon
-- [ ] Check if file name is detected
-- [ ] Check if file ID is shown
-- [ ] Verify "Not on Google Drive" doesn't appear
+- [x] Go to Google Drive
+- [x] Open a document/spreadsheet
+- [x] Click extension icon
+- [x] Check if file name is detected
+- [x] Check if file ID is shown
+- [x] Verify "Not on Google Drive" doesn't appear
 
 ### **Test 4: Google Docs/Sheets/Slides**
-- [ ] Open a Google Doc
-- [ ] Click extension icon
-- [ ] Check if file is detected
-- [ ] Repeat for Google Sheets
-- [ ] Repeat for Google Slides
+- [x] Open a Google Doc
+- [x] Click extension icon
+- [x] Check if file is detected
+- [x] Repeat for Google Sheets
+- [x] Repeat for Google Slides
 
 ## **🏷️ Tag Operations Tests**
 
 ### **Test 5: Add Tag**
-- [ ] Select a file in Google Drive
-- [ ] Open extension popup
-- [ ] Type a tag name in the input field
-- [ ] Click "Add" button
-- [ ] Check if tag appears in the list
-- [ ] Check if input field clears
-- [ ] Check console for success/error messages
+- [x] Select a file in Google Drive
+- [x] Open extension popup
+- [x] Type a tag name in the input field
+- [x] Click "Add" button
+- [x] Check if tag appears in the list
+- [x] Check if input field clears
+- [x] Check console for success/error messages
 
 ### **Test 6: Remove Tag**
-- [ ] Add a tag (from Test 5)
-- [ ] Click the "×" button next to the tag
-- [ ] Check if tag is removed from list
-- [ ] Check console for success/error messages
+- [x] Add a tag (from Test 5)
+- [x] Click the "×" button next to the tag
+- [x] Check if tag is removed from list
+- [x] Check console for success/error messages
 
 ### **Test 7: Duplicate Tags**
-- [ ] Try to add the same tag twice
-- [ ] Check if duplicate is prevented
-- [ ] Check if error message appears
+- [x] Try to add the same tag twice
+- [x] Check if duplicate is prevented
+- [x] Check if error message appears
 
 ## **🖱️ Context Menu Tests**
 
 ### **Test 8: Right-Click Menu**
-- [ ] Go to Google Drive
-- [ ] Right-click on a file
-- [ ] Check if "Tag File" appears in context menu
-- [ ] Click "Tag File"
-- [ ] Check if dialog opens
-- [ ] Check if file is detected in dialog
+- [x] Go to Google Drive
+- [x] Right-click on a file
+- [x] Check if "Tag File" appears in context menu
+- [x] Click "Tag File"
+- [x] Check if dialog opens
+- [x] Check if file is detected in dialog
 
 ### **Test 9: Dialog Operations**
-- [ ] Open tag dialog (from Test 8)
-- [ ] Try to add a tag in the dialog
-- [ ] Check if tag appears in dialog
-- [ ] Click "Save" button
-- [ ] Check if dialog closes
+- [x] Open tag dialog (from Test 8)
+- [x] Try to add a tag in the dialog
+- [x] Check if tag appears in dialog
+- [x] Click "Save" button
+- [x] Check if dialog closes
 - [ ] Reopen popup and check if tag persists
 
 ## **🔍 Error Handling Tests**
@@ -118,8 +118,11 @@
 
 ## **🎯 Test Completion**
 
-**Overall Status:** [ ] Working / [ ] Partially Working / [ ] Not Working
+**Overall Status:** [x] Partially Working / [ ] Working / [ ] Not Working
 
-**Ready for Refactor:** [ ] Yes / [ ] No (explain why)
+**Ready for Refactor:** [x] Yes / [ ] No (explain why)
 
-**Priority Issues:** List any critical issues that need fixing before refactor
+**Priority Issues:** 
+- **Critical**: Popup and dialog tag sync issue needs to be fixed during refactor
+- **High**: Popup tags don't persist - needs to use background script storage
+- **Medium**: Ensure both interfaces show consistent data
