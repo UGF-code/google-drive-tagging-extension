@@ -474,6 +474,10 @@ class DriveContentScript {
                         const result = await this.addTagToFile(fileId, tagText);
                         console.log('addTagToFile returned:', result);
                         
+                        // Clear any existing messages first
+                        const existingMessages = document.querySelectorAll('[style*="position: fixed"][style*="top: 20px"][style*="right: 20px"]');
+                        existingMessages.forEach(msg => msg.remove());
+                        
                         if (result.success) {
                             tagInput.value = '';
                             console.log('Tag added successfully');
@@ -537,26 +541,10 @@ class DriveContentScript {
             
             if (addBtn) {
                 console.log('Adding click listener to Add button');
-                console.log('Add button element:', addBtn);
-                console.log('Add button HTML:', addBtn.outerHTML);
                 
-                // Test if button is clickable with multiple event types
+                // Remove any existing listeners to prevent duplicates
+                addBtn.removeEventListener('click', addTag);
                 addBtn.addEventListener('click', addTag);
-                addBtn.addEventListener('click', () => {
-                    console.log('🎯 ADD BUTTON CLICKED - TEST EVENT');
-                });
-                addBtn.addEventListener('mousedown', () => {
-                    console.log('🎯 ADD BUTTON MOUSEDOWN - TEST EVENT');
-                });
-                addBtn.addEventListener('mouseup', () => {
-                    console.log('🎯 ADD BUTTON MOUSEUP - TEST EVENT');
-                });
-                
-                // Test if button is disabled or has pointer events
-                console.log('Add button disabled:', addBtn.disabled);
-                console.log('Add button pointer-events:', window.getComputedStyle(addBtn).pointerEvents);
-                console.log('Add button display:', window.getComputedStyle(addBtn).display);
-                console.log('Add button visibility:', window.getComputedStyle(addBtn).visibility);
             } else {
                 console.error('Add button not found!');
             }
